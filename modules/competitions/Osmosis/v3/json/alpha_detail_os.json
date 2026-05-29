@@ -1,0 +1,264 @@
+{
+    "id": "88gAZ3zv",
+    "type": "REGULAR",
+    "author": "ZM10537",
+    "settings": {
+        "instrumentType": "EQUITY",
+        "region": "IND",
+        "universe": "TOP500",
+        "delay": 1,
+        "decay": 4,
+        "neutralization": "SLOW",
+        "truncation": 0.02,
+        "pasteurization": "ON",
+        "unitHandling": "VERIFY",
+        "nanHandling": "OFF",
+        "maxTrade": "OFF",
+        "maxPosition": "OFF",
+        "language": "FASTEXPR",
+        "visualization": false,
+        "startDate": "2013-01-20",
+        "endDate": "2023-01-20"
+    },
+    "regular": {
+        "code": "signal = abs(fnd44_probability_restatement_global);\r\nts_ir(rank(signal-ts_zscore(signal,250)), 5)",
+        "description": "Idea: This alpha identifies companies exhibiting anomalous trends in their \"accounting quality\" risk by analyzing the probability of financial restatements. It operates on the logic that a significant divergence (Z-score) from the long-term mean probability of restatement is a critical risk signal. However, instead of simply punishing high probability, the alpha rewards stability: companies where the current restatement probability is stable relative to its historical volatility (low Z-score deviation) are favored. By using the Information Ratio (IR) of this stability metric over a very short window (5 days), the strategy captures immediate shifts in market perception regarding accounting risk, betting on companies with the most consistent \"clean\" accounting outlook.\nRationale for data used:\n- fnd44_probability_restatement_global : A fundamental data field estimating the probability that a company will restate its financial reports. This is a proxy for accounting quality and potential fraud risk.\nRationale for operators used:\n- abs(...) : Takes the absolute value of the probability to ensure we are measuring magnitude, though probability is typically positive. This might be a safety check for the data field's format.\n- ts_zscore(..., 250) : Calculates the Z-score over a long-term window (250 days, approx. 1 year). This normalizes the current probability against its annual history, highlighting how \"unusual\" the current risk level is for that specific company.\n- ... - ts_zscore(...) : Subtracts the Z-score from the raw probability. This constructs a \"mean-reversion\" or \"stability\" signal. If the current probability is high but the Z-score is also high (it's unusually high), the difference might be small. If the probability is low but the Z-score is low (it's usually this low), the difference is also small. The construction effectively isolates the unexpected component of the risk.\n- rank(...) : Ranks the resulting signal across the universe. This cross-sectional comparison ensures we are picking the best relative performers in terms of this risk-stability metric.\n- ts_ir(..., 5) : Calculates the Information Ratio (Mean/StdDev) of the rank over a very short 5-day window. This is the final signal generator. It favors stocks that have consistently held a stable or favorable rank in this risk metric over the past week, filtering out day-to-day noise in the fundamental data feed into the ranking.",
+        "operatorCount": 5
+    },
+    "dateCreated": "2026-01-16T11:23:44-05:00",
+    "dateSubmitted": "2026-01-16T11:25:02-05:00",
+    "dateModified": "2026-03-02T22:38:00-05:00",
+    "name": null,
+    "favorite": false,
+    "hidden": false,
+    "color": null,
+    "category": null,
+    "tags": [
+        "Fundamental"
+    ],
+    "classifications": [
+        {
+            "id": "DATA_USAGE:SINGLE_DATA_SET",
+            "name": "Single Data Set Alpha"
+        },
+        {
+            "id": "POWER_POOL:POWER_POOL_ELIGIBLE",
+            "name": "Power Pool Alpha"
+        }
+    ],
+    "grade": null,
+    "stage": "OS",
+    "status": "ACTIVE",
+    "is": {
+        "pnl": 4203642,
+        "bookSize": 20000000,
+        "longCount": 194,
+        "shortCount": 308,
+        "turnover": 0.2983,
+        "returns": 0.0798,
+        "drawdown": 0.0622,
+        "margin": 0.000535,
+        "sharpe": 1.6,
+        "fitness": 0.83,
+        "startDate": "2013-01-20",
+        "investabilityConstrained": {
+            "pnl": 2475936,
+            "bookSize": 20000000,
+            "longCount": 198,
+            "shortCount": 305,
+            "turnover": 0.1321,
+            "returns": 0.047,
+            "drawdown": 0.0809,
+            "margin": 0.000711,
+            "fitness": 0.54,
+            "sharpe": 0.9
+        },
+        "selfCorrelation": 0,
+        "prodCorrelation": 0.2361,
+        "checks": [
+            {
+                "name": "LOW_SHARPE",
+                "result": "PASS",
+                "limit": 1.58,
+                "value": 1.6
+            },
+            {
+                "name": "LOW_FITNESS",
+                "result": "WARNING",
+                "limit": 1,
+                "value": 0.83
+            },
+            {
+                "name": "LOW_TURNOVER",
+                "result": "PASS",
+                "limit": 0.01,
+                "value": 0.2983
+            },
+            {
+                "name": "HIGH_TURNOVER",
+                "result": "PASS",
+                "limit": 0.4,
+                "value": 0.2983
+            },
+            {
+                "name": "CONCENTRATED_WEIGHT",
+                "result": "WARNING",
+                "date": "2019-11-15",
+                "limit": 0.1,
+                "value": 0.163494
+            },
+            {
+                "name": "LOW_SUB_UNIVERSE_SHARPE",
+                "result": "PASS",
+                "limit": 0.47,
+                "value": 0.94
+            },
+            {
+                "name": "LOW_ROBUST_UNIVERSE_SHARPE",
+                "result": "PASS",
+                "limit": 1,
+                "value": 1.11
+            },
+            {
+                "name": "LOW_2Y_SHARPE",
+                "result": "WARNING",
+                "value": 1.32,
+                "limit": 1.58
+            },
+            {
+                "name": "POWER_POOL_CORRELATION",
+                "result": "PENDING"
+            },
+            {
+                "result": "PASS",
+                "name": "MATCHES_PYRAMID",
+                "effective": 1,
+                "multiplier": 1.4,
+                "pyramids": [
+                    {
+                        "name": "IND/D1/FUNDAMENTAL",
+                        "multiplier": 1.4
+                    }
+                ]
+            },
+            {
+                "result": "WARNING",
+                "name": "MATCHES_THEMES",
+                "themes": [
+                    {
+                        "id": "q4O05qy",
+                        "multiplier": 1.5,
+                        "name": "MEA Region Theme"
+                    },
+                    {
+                        "id": "YynpOlD",
+                        "multiplier": 3,
+                        "name": "Investable HTVR Theme"
+                    }
+                ]
+            },
+            {
+                "result": "PENDING",
+                "name": "MATCHES_THEMES",
+                "themes": [
+                    {
+                        "id": "lyvRJ3y",
+                        "multiplier": 1,
+                        "name": "All regions/D0 Power Pool May`26"
+                    }
+                ]
+            }
+        ]
+    },
+    "os": {
+        "startDate": "2023-01-21",
+        "turnover": 0.286,
+        "returns": 0.0084,
+        "drawdown": 0.0248,
+        "margin": 0.000059,
+        "fitness": 0.03,
+        "preCloseSharpe": null,
+        "sharpe": 0.2,
+        "sharpe60": -1.23,
+        "sharpe125": 0.35,
+        "sharpe250": null,
+        "sharpe500": null,
+        "osISSharpeRatio": 0.12,
+        "preCloseSharpeRatio": null,
+        "checks": [
+            {
+                "name": "SELF_CORRELATION",
+                "result": "PENDING"
+            },
+            {
+                "name": "SHARPE",
+                "result": "PENDING"
+            },
+            {
+                "name": "NEW_HIGH",
+                "result": "PENDING"
+            },
+            {
+                "name": "SUB_UNIVERSE_SHARPE",
+                "result": "PENDING"
+            },
+            {
+                "name": "RANK_SHARPE",
+                "result": "PENDING"
+            },
+            {
+                "name": "DRAWDOWN",
+                "result": "PENDING"
+            },
+            {
+                "name": "CONCENTRATED_WEIGHT",
+                "result": "PENDING"
+            },
+            {
+                "name": "PROD_CORRELATION",
+                "result": "PENDING"
+            },
+            {
+                "name": "SUPER_UNIVERSE_SHARPE",
+                "result": "PENDING"
+            },
+            {
+                "name": "IS_SHARPE",
+                "result": "PENDING"
+            },
+            {
+                "name": "MEMORY_USAGE",
+                "result": "PENDING"
+            }
+        ]
+    },
+    "train": null,
+    "test": null,
+    "prod": null,
+    "competitions": [],
+    "themes": [
+        {
+            "id": "lyakMOD",
+            "name": "IND/D1 Power Pool Jan`26",
+            "multiplier": 1
+        }
+    ],
+    "pyramids": [
+        {
+            "name": "IND/D1/FUNDAMENTAL",
+            "multiplier": 1.5
+        }
+    ],
+    "pyramidThemes": {
+        "effective": 1,
+        "pyramids": [
+            {
+                "name": "IND/D1/FUNDAMENTAL",
+                "multiplier": 1.5
+            }
+        ]
+    },
+    "team": null,
+    "osmosisPoints": null,
+    "origin": "PLATFORM"
+}

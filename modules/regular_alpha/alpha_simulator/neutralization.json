@@ -1,0 +1,25 @@
+{
+    "base": ["SUBINDUSTRY", "INDUSTRY", "SECTOR", "MARKET"],
+    "risk": ["FAST", "SLOW", "SLOW_AND_FAST", "CROWDING", "STATISTICAL", "REVERSION_AND_MOMENTUM"],
+    "ind_risk": ["FAST", "SLOW", "SLOW_AND_FAST", "CROWDING", "REVERSION_AND_MOMENTUM"],
+    "USA": {
+        "base": "SUBINDUSTRY",
+        "other": ["INDUSTRY", "SECTOR", "MARKET", "FAST", "SLOW", "SLOW_AND_FAST", "CROWDING", "REVERSION_AND_MOMENTUM"]
+    },
+    "GLB": {
+        "base": "REVERSION_AND_MOMENTUM",
+        "other": []
+    },
+    "EUR": {
+        "base": "SUBINDUSTRY",
+        "other": ["INDUSTRY", "SECTOR", "MARKET", "FAST", "SLOW", "SLOW_AND_FAST", "CROWDING", "REVERSION_AND_MOMENTUM"]
+    },
+    "ASI": {
+        "base": "FAST",
+        "other": ["SLOW", "SLOW_AND_FAST", "CROWDING", "STATISTICAL", "REVERSION_AND_MOMENTUM"]
+    },
+    "IND": {
+        "base": "SUBINDUSTRY",
+        "other": ["INDUSTRY", "SECTOR", "MARKET", "FAST", "SLOW", "SLOW_AND_FAST", "CROWDING", "REVERSION_AND_MOMENTUM"]
+    }
+}

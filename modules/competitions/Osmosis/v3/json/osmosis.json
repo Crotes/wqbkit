@@ -1,0 +1,98 @@
+[
+    {
+        "region": "USA",
+        "delay": 1,
+        "pointsAllocated": 100000,
+        "alphas": 37
+    },
+    {
+        "region": "USA",
+        "delay": 0,
+        "pointsAllocated": 0,
+        "alphas": 0
+    },
+    {
+        "region": "GLB",
+        "delay": 1,
+        "pointsAllocated": 0,
+        "alphas": 0
+    },
+    {
+        "region": "EUR",
+        "delay": 1,
+        "pointsAllocated": 100000,
+        "alphas": 19
+    },
+    {
+        "region": "EUR",
+        "delay": 0,
+        "pointsAllocated": 0,
+        "alphas": 0
+    },
+    {
+        "region": "ASI",
+        "delay": 1,
+        "pointsAllocated": 100000,
+        "alphas": 10
+    },
+    {
+        "region": "CHN",
+        "delay": 0,
+        "pointsAllocated": 0,
+        "alphas": 0
+    },
+    {
+        "region": "CHN",
+        "delay": 1,
+        "pointsAllocated": 0,
+        "alphas": 0
+    },
+    {
+        "region": "KOR",
+        "delay": 1,
+        "pointsAllocated": 0,
+        "alphas": 0
+    },
+    {
+        "region": "HKG",
+        "delay": 1,
+        "pointsAllocated": 0,
+        "alphas": 0
+    },
+    {
+        "region": "JPN",
+        "delay": 1,
+        "pointsAllocated": 0,
+        "alphas": 0
+    },
+    {
+        "region": "JPN",
+        "delay": 0,
+        "pointsAllocated": 0,
+        "alphas": 0
+    },
+    {
+        "region": "AMR",
+        "delay": 1,
+        "pointsAllocated": 0,
+        "alphas": 0
+    },
+    {
+        "region": "AMR",
+        "delay": 0,
+        "pointsAllocated": 0,
+        "alphas": 0
+    },
+    {
+        "region": "IND",
+        "delay": 1,
+        "pointsAllocated": 100000,
+        "alphas": 11
+    },
+    {
+        "region": "MEA",
+        "delay": 1,
+        "pointsAllocated": 0,
+        "alphas": 0
+    }
+]

@@ -1,0 +1,238 @@
+{
+    "id": "2ragnz35",
+    "type": "REGULAR",
+    "author": "ZM10537",
+    "settings": {
+        "instrumentType": "EQUITY",
+        "region": "EUR",
+        "universe": "TOP2500",
+        "delay": 1,
+        "decay": 64,
+        "neutralization": "FAST",
+        "truncation": 0.02,
+        "pasteurization": "ON",
+        "unitHandling": "VERIFY",
+        "nanHandling": "OFF",
+        "maxTrade": "OFF",
+        "maxPosition": "OFF",
+        "language": "FASTEXPR",
+        "visualization": true,
+        "startDate": "2014-01-01",
+        "endDate": "2023-12-31"
+    },
+    "regular": {
+        "code": "ts_mean(group_neutralize(-(inverse(imb5_score)), subindustry), 88)",
+        "description": null,
+        "operatorCount": 4
+    },
+    "dateCreated": "2026-05-10T04:46:53-04:00",
+    "dateSubmitted": "2026-05-11T00:54:24-04:00",
+    "dateModified": "2026-05-11T00:51:57-04:00",
+    "name": null,
+    "favorite": false,
+    "hidden": false,
+    "color": null,
+    "category": null,
+    "tags": [
+        "Imbalance"
+    ],
+    "classifications": [
+        {
+            "id": "DATA_USAGE:SINGLE_DATA_SET",
+            "name": "Single Data Set Alpha"
+        },
+        {
+            "id": "REGULAR:REGULAR",
+            "name": "Regular Alpha"
+        }
+    ],
+    "grade": null,
+    "stage": "OS",
+    "status": "ACTIVE",
+    "is": {
+        "pnl": 8049736,
+        "bookSize": 20000000,
+        "longCount": 1583,
+        "shortCount": 1232,
+        "turnover": 0.0868,
+        "returns": 0.078,
+        "drawdown": 0.0481,
+        "margin": 0.001797,
+        "sharpe": 1.96,
+        "fitness": 1.55,
+        "startDate": "2014-01-01",
+        "investabilityConstrained": {
+            "pnl": 7255463,
+            "bookSize": 20000000,
+            "longCount": 1546,
+            "shortCount": 1273,
+            "turnover": 0.0438,
+            "returns": 0.0703,
+            "drawdown": 0.0556,
+            "margin": 0.003211,
+            "fitness": 1.39,
+            "sharpe": 1.86
+        },
+        "selfCorrelation": 0.5173,
+        "prodCorrelation": 0.6594,
+        "checks": [
+            {
+                "name": "LOW_SHARPE",
+                "result": "PASS",
+                "limit": 1.58,
+                "value": 1.96
+            },
+            {
+                "name": "LOW_FITNESS",
+                "result": "PASS",
+                "limit": 1,
+                "value": 1.55
+            },
+            {
+                "name": "LOW_TURNOVER",
+                "result": "PASS",
+                "limit": 0.01,
+                "value": 0.0868
+            },
+            {
+                "name": "HIGH_TURNOVER",
+                "result": "PASS",
+                "limit": 0.7,
+                "value": 0.0868
+            },
+            {
+                "name": "CONCENTRATED_WEIGHT",
+                "result": "PASS"
+            },
+            {
+                "name": "LOW_SUB_UNIVERSE_SHARPE",
+                "result": "PASS",
+                "limit": 1.02,
+                "value": 1.28
+            },
+            {
+                "name": "LOW_2Y_SHARPE",
+                "result": "PASS",
+                "value": 1.64,
+                "limit": 1.58
+            },
+            {
+                "name": "POWER_POOL_CORRELATION",
+                "result": "PENDING"
+            },
+            {
+                "result": "PASS",
+                "name": "MATCHES_PYRAMID",
+                "effective": 1,
+                "multiplier": 1,
+                "pyramids": [
+                    {
+                        "name": "EUR/D1/IMBALANCE",
+                        "multiplier": 1
+                    }
+                ]
+            },
+            {
+                "result": "WARNING",
+                "name": "MATCHES_THEMES",
+                "themes": [
+                    {
+                        "id": "q4O05qy",
+                        "multiplier": 1.5,
+                        "name": "MEA Region Theme"
+                    },
+                    {
+                        "id": "YynpOlD",
+                        "multiplier": 3,
+                        "name": "Investable HTVR Theme"
+                    }
+                ]
+            },
+            {
+                "result": "PENDING",
+                "name": "MATCHES_THEMES",
+                "themes": [
+                    {
+                        "id": "lyvRJ3y",
+                        "multiplier": 1,
+                        "name": "All regions/D0 Power Pool May`26"
+                    }
+                ]
+            }
+        ]
+    },
+    "os": {
+        "startDate": "2024-01-01",
+        "osISSharpeRatio": null,
+        "preCloseSharpeRatio": null,
+        "checks": [
+            {
+                "name": "MEMORY_USAGE",
+                "result": "PENDING"
+            },
+            {
+                "name": "IS_SHARPE",
+                "result": "PENDING"
+            },
+            {
+                "name": "SUB_UNIVERSE_SHARPE",
+                "result": "PENDING"
+            },
+            {
+                "name": "CONCENTRATED_WEIGHT",
+                "result": "PENDING"
+            },
+            {
+                "name": "PROD_CORRELATION",
+                "result": "PENDING"
+            },
+            {
+                "name": "SHARPE",
+                "result": "PENDING"
+            },
+            {
+                "name": "SELF_CORRELATION",
+                "result": "PENDING"
+            },
+            {
+                "name": "SUPER_UNIVERSE_SHARPE",
+                "result": "PENDING"
+            },
+            {
+                "name": "NEW_HIGH",
+                "result": "PENDING"
+            },
+            {
+                "name": "RANK_SHARPE",
+                "result": "PENDING"
+            },
+            {
+                "name": "DRAWDOWN",
+                "result": "PENDING"
+            }
+        ]
+    },
+    "train": null,
+    "test": null,
+    "prod": null,
+    "competitions": [],
+    "themes": [],
+    "pyramids": [
+        {
+            "name": "EUR/D1/IMBALANCE",
+            "multiplier": 1
+        }
+    ],
+    "pyramidThemes": {
+        "effective": 1,
+        "pyramids": [
+            {
+                "name": "EUR/D1/IMBALANCE",
+                "multiplier": 1
+            }
+        ]
+    },
+    "team": null,
+    "osmosisPoints": null,
+    "origin": "PLATFORM"
+}

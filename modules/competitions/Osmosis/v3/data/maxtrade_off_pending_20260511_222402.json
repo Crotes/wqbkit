@@ -1,0 +1,80 @@
+{
+  "generated_at": "2026-05-11T22:24:02.393050",
+  "total": 2,
+  "regions": {
+    "USA": [
+      {
+        "id": "O0m6elrg",
+        "sharpe": 1.29,
+        "fitness": 0.91,
+        "turnover": 0.0784,
+        "returns": 0.062,
+        "drawdown": 0.0966,
+        "margin": 0.001581,
+        "dataset_tag": "Analyst",
+        "neutralization": "REVERSION_AND_MOMENTUM",
+        "expression": "ts_ir(arc_tan(vec_count(anl2_count)), 240)",
+        "settings_full": {
+          "instrumentType": "EQUITY",
+          "region": "USA",
+          "universe": "TOP3000",
+          "delay": 1,
+          "decay": 2,
+          "neutralization": "REVERSION_AND_MOMENTUM",
+          "truncation": 0.02,
+          "pasteurization": "ON",
+          "unitHandling": "VERIFY",
+          "nanHandling": "OFF",
+          "maxTrade": "OFF",
+          "maxPosition": "OFF",
+          "language": "FASTEXPR",
+          "visualization": false,
+          "startDate": "2014-01-01",
+          "endDate": "2023-12-31"
+        },
+        "regular_full": {
+          "code": "ts_ir(arc_tan(vec_count(anl2_count)), 240)",
+          "description": "Idea: Stable and consistent growth in analyst coverage indicates building institutional interest and market consensus. Measuring the risk-adjusted stability of estimate counts over a long horizon captures sustainable momentum driven by fundamental attention rather than short-lived hype.\nRationale for data used:\n- anl2_count: Represents the number of estimates in the distribution, serving as a proxy for analyst coverage and institutional attention.\nRationale for operators used:\n- ts_ir: Calculates the 240-day information ratio to identify stocks with consistently stable coverage growth relative to its volatility.\n- vec_count: Extracts the size of the vector field to quantify the total coverage.\n- arc_tan: Applies a non-linear transformation to dampen the impact of extreme outliers in analyst counts.",
+          "operatorCount": 3
+        }
+      }
+    ],
+    "EUR": [
+      {
+        "id": "vRx37jvG",
+        "sharpe": 1.45,
+        "fitness": 0.97,
+        "turnover": 0.0445,
+        "returns": 0.0563,
+        "drawdown": 0.0863,
+        "margin": 0.002533,
+        "dataset_tag": "Model",
+        "neutralization": "REVERSION_AND_MOMENTUM",
+        "expression": "ts_std_dev(vec_norm(mdl243_region_rank), 120)",
+        "settings_full": {
+          "instrumentType": "EQUITY",
+          "region": "EUR",
+          "universe": "TOPCS1600",
+          "delay": 1,
+          "decay": 128,
+          "neutralization": "REVERSION_AND_MOMENTUM",
+          "truncation": 0.02,
+          "pasteurization": "ON",
+          "unitHandling": "VERIFY",
+          "nanHandling": "OFF",
+          "maxTrade": "OFF",
+          "maxPosition": "OFF",
+          "language": "FASTEXPR",
+          "visualization": false,
+          "startDate": "2014-01-01",
+          "endDate": "2023-12-31"
+        },
+        "regular_full": {
+          "code": "ts_std_dev(vec_norm(mdl243_region_rank), 120)",
+          "description": "Idea: The alpha captures the historical volatility of a stock's regional combined alpha model rank over a long-term window. High volatility in these aggregated bullish signals indicates significant uncertainty and shifting market sentiment regarding the firm's regional standing, capturing a risk premium associated with sentiment instability.\nRationale for data used:\n- mdl243_region_rank: A 1-100 regional rank based on the StarMine Combined Alpha Model, serving as a comprehensive bullish signal for the security.\nRationale for operators used:\n- vec_norm(): Aggregates the vector field by summing its absolute values, providing a total magnitude of the model's regional rank signal.\n- ts_std_dev(): Measures the 120-day historical volatility of the aggregated rank, isolating stocks with highly unstable model sentiment.",
+          "operatorCount": 2
+        }
+      }
+    ]
+  }
+}

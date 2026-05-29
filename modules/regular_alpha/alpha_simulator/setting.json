@@ -1,0 +1,5 @@
+{
+    "limit_of_multi_simulations": 3,
+    "limit_of_children_simulations": 10,
+    "End": false
+}

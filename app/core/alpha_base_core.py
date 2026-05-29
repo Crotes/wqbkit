@@ -1,0 +1,193 @@
+"""
+WorldQuant Brain Alpha 交互的核心功能。
+包括认证、带重试的请求处理和基本的 Alpha 管理。
+"""
+import time
+from enum import Enum
+from typing import Any, Dict, Optional
+
+import requests
+from wqb import NULL, WQBSession
+from datetime import datetime, timedelta, timezone
+
+from wqbkit.app.config import config
+from wqbkit.app.core.decorators import retry_decorator
+from wqbkit.app.core.logger import get_logger
+
+RETRY_AFTER_MIN_SECONDS: int = 10
+
+class AlphaBaseCore:
+    """WorldQuant Brain Alpha 交互的基类。"""
+
+    def __init__(self) -> None:
+        self._username = config.WQB_USERNAME
+        self._password = config.WQB_PASSWORD
+        self.logger = get_logger(self.__class__.__name__)
+        self.wqbs = self._login()
+
+    @retry_decorator()
+    def _login(self) -> WQBSession:
+        """登录并获取WQB会话"""
+        # 创建新session
+        wqbs = WQBSession(
+            wqb_auth=(self._username, self._password),
+            logger=self.logger
+        )
+        resp = wqbs.auth_request()
+        
+        if resp.status_code != 201:
+            # 装饰器会捕获异常并记录，这里只需抛出
+            raise ConnectionError(f'登录失败: {resp.status_code}')
+            
+        user_id = resp.json()['user']['id']
+        self.logger.info(f'登录成功, 用户ID: {user_id}')
+
+        return wqbs
+
+    def _handle_request_with_retry(self, method_name: str, *args, **kwargs) -> requests.Response:
+        """统一处理带有重试机制的请求（针对 429 Too Many Requests）"""
+        method = getattr(self.wqbs, method_name)
+        while True:
+            response = method(*args, **kwargs)
+            retry_after = float(response.headers.get("Retry-After", 0))
+            if retry_after == 0:
+                break
+            
+            if response.status_code == 429:
+                ti = max(RETRY_AFTER_MIN_SECONDS, retry_after)
+                self.logger.info(f'429错误, {method_name} 等待 {ti} 秒({ti//60} 分 {ti%60} 秒)')
+                time.sleep(ti)
+                continue
+            
+            time.sleep(max(10, retry_after))
+        
+        return response
+
+    def get(self, url: str) -> requests.Response:
+        """发送 GET 请求，自动处理 429 重试"""
+        response = self._handle_request_with_retry('get', url)
+        response.raise_for_status()
+        return response
+
+    def post(self, url: str, data: Dict[str, Any]) -> requests.Response:
+        """发送 POST 请求，自动处理 429 重试"""
+        response = self.wqbs.post(url, json=data)
+        response.raise_for_status()
+        return response
+    
+    def delete(self, url: str) -> requests.Response:
+        """发送 DELETE 请求，自动处理 429 重试"""
+        response = self.wqbs.delete(url)
+        response.raise_for_status()
+        return response
+
+    def patch(self, url: str, json: Dict[str, Any]) -> requests.Response:
+        """发送 PATCH 请求，自动处理 429 重试"""
+        response = self._handle_request_with_retry('patch', url, json=json)
+        response.raise_for_status()
+        return response
+
+    @retry_decorator()
+    def update_alpha_metadata(
+        self,
+        alpha_id: str,
+        tag: str | list = None,
+    ) -> None:
+        """更新alpha元数据
+
+        Args:
+            alpha_id: Alpha ID
+            tag: Alpha标签
+        """
+        try:
+            if type (tag) != list:
+                tags = [tag]
+            else:
+                tags = tag
+            
+            resp = self._handle_request_with_retry(
+                'patch_properties',
+                alpha_id,
+                tags=tags,
+                log=None
+            )
+            
+            if resp.ok:
+                self.logger.info(f"{alpha_id}更新tag成功")
+            else:
+                error_msg = resp.json().get('error', 'Unknown error')
+                self.logger.warning(f"{alpha_id}更新tag失败: {resp.status_code} - {error_msg}")
+        except Exception as e:
+            # 装饰器会捕获并重试
+            raise Exception(f"{alpha_id}更新失败: {str(e)}") from e
+
+    @retry_decorator()
+    def clear_alpha_metadata(self, alpha_id: str) -> None:
+        """清除alpha元数据
+
+        Args:
+            alpha_id: Alpha ID
+        """
+        try:
+            resp = self._handle_request_with_retry(
+                'patch_properties',
+                alpha_id,
+                tags=NULL,
+                color=NULL,
+            )
+            
+            if resp.ok:
+                self.logger.info(f"{alpha_id}清除成功")
+            else:
+                error_msg = resp.json().get('error', 'Unknown error')
+                self.logger.warning(f"{alpha_id}清除失败: {resp.status_code} - {error_msg}")
+        except Exception as e:
+            raise Exception(f"{alpha_id}清除失败: {str(e)}") from e
+
+    @retry_decorator()
+    def hidden_alpha(self, alpha_ids: str|list) -> None:
+        """隐藏alpha
+
+        Args:
+            alpha_id: Alpha ID
+        """
+        if type(alpha_ids) != list:
+            alpha_ids = [alpha_ids]
+
+        for alpha_id in alpha_ids:
+            try:
+                self._handle_request_with_retry(
+                    'patch_properties',
+                    alpha_id,
+                    hidden=True,
+                    log=None
+                )
+                self.logger.info(f"{alpha_id}隐藏成功")
+            except Exception as e:
+                self.logger.error(f"{alpha_id}隐藏失败: {str(e)}")
+                raise
+
+    def get_operators(self):
+        resp = self.wqbs.search_operators(log=None)
+        self.operators = set([item['name'] for item in resp.json() if 'REGULAR' in item['scope']])
+
+
+    def get_current_quarter_range(self):
+        """
+        获取当前季度的起点和终点
+        返回 (start_date, end_date) 两个 datetime 对象，格式如 2025-01-28T00:00:00-05:00
+        """
+        tz = timezone(timedelta(hours=-5))  # UTC-05:00
+        now = datetime.now(tz)
+        current_month = now.month
+        # 计算当前季度第一个月
+        first_month_of_quarter = 3 * ((current_month - 1) // 3) + 1
+        start_date = now.replace(month=first_month_of_quarter, day=1,
+                            hour=0, minute=0, second=0, microsecond=0)
+        # 计算下一季度第一天
+        next_quarter_first_month = first_month_of_quarter + 3
+        if next_quarter_first_month > 12:
+            end_date = start_date.replace(year=start_date.year + 1, month=1, day=1)
+        else:
+            end_date = start_date.replace(month=next_quarter_first_month, day=1)
+        return start_date, end_date
