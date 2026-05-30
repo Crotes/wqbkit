@@ -22,7 +22,7 @@ from wqbkit.app.core.decorators import retry_decorator
 from wqbkit.app.database.alpha_db_manager import AlphaDBManager
 
 # 数据模型
-from wqbkit.app.database.schemas import FactorData, SimulationData, TaskData, FieldDate
+from wqbkit.app.database import schemas
 
 # 业务模块
 from wqbkit.modules.correlation.alpha_calc_corr import AlphaCalcCorr
@@ -41,10 +41,7 @@ __all__ = [
     "AlphaDBManager",
     "retry_decorator",
     # 数据模型
-    "FactorData",
-    "SimulationData",
-    "TaskData",
-    "FieldDate",
+    "schemas",
     # 业务模块
     "AlphaCalcCorr",
     "AlphaGenerator",
