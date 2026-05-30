@@ -45,7 +45,7 @@ class AlphaDBManager:
         """初始化数据库会话工厂，绑定到 SQLAlchemy 引擎。"""
         if not config.ENABLE_DATABASE:
             raise RuntimeError(
-                "Database is disabled. Set WQB_ENABLE_DATABASE=true in .env to enable DB features."
+                "Database is disabled. Set DB_ENABLE=true in .env to enable DB features."
             )
         self._session_factory = scoped_session(sessionmaker(bind=get_session_factory().bind))
     

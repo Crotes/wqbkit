@@ -22,7 +22,7 @@ class AlphaDbCore(AlphaBaseCore):
         """初始化数据库核心：继承基类登录会话并初始化数据库管理器。"""
         if not config.ENABLE_DATABASE:
             raise RuntimeError(
-                "Database is disabled. Set WQB_ENABLE_DATABASE=true in .env to enable DB features."
+                "Database is disabled. Set DB_ENABLE=true in .env to enable DB features."
             )
         super().__init__()
         self.dbmanager = AlphaDBManager()
