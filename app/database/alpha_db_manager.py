@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session as SQLAlchemySession
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.dialects.postgresql import insert
 
-from wqbkit.app.database.schemas import FactorData, SimulationData, TaskData, FieldDate
+from wqbkit.app.database.schemas import FactorData, SimulationData, TaskData
 
 # 本地模块
 from .db_models import (

@@ -1,6 +1,3 @@
-import sys
-
-sys.path.append('/home/worldquant/wqb/Code')
 import random
 from typing import Dict, List, Optional, Set, Tuple
 
@@ -9,7 +6,6 @@ from tqdm import tqdm
 
 from wqbkit.app.core.alpha_db_core import AlphaDbCore
 from wqbkit.app.database.schemas import TaskData, FactorData
-from wqbkit.modules.regular_alpha.alpha_machine.config.constants import EXCLUDED_TOKENS
 from wqbkit.modules.regular_alpha.alpha_machine.alpha_generator import AlphaGenerator
 
 

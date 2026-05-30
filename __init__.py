@@ -1,18 +1,17 @@
 """WorldQuant Brain Alpha Research Toolkit"""
 
-import os
+from wqbkit.app.config import PROJECT_ROOT
 from dotenv import load_dotenv
 
 # 显式加载项目根目录的 .env（适用于 editable install 模式）
 # load_dotenv 默认 override=False，不会覆盖已存在的环境变量
-_project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-_env_path = os.path.join(_project_root, ".env")
-if os.path.exists(_env_path):
+_env_path = PROJECT_ROOT / ".env"
+if _env_path.exists():
     load_dotenv(_env_path)
 else:
     load_dotenv()
 
-__version__ = "0.2.2"
+__version__ = "0.2.5"
 
 # ---------- Public API ----------
 # 核心基础设施
@@ -30,6 +29,10 @@ from wqbkit.modules.regular_alpha.alpha_simulator.alpha_simulator import AlphaSi
 from wqbkit.modules.super_alpha.alpha_dyeing import AlphaDyeing
 from wqbkit.modules.super_alpha.super_alpha_simulator import SuperAlphaSimulator
 from wqbkit.modules.message.alpha_message_sender import sc_send
+from wqbkit.modules.competitions.Osmosis.osmosis_selector_v3 import OsmosisAlphaSelectorV3
+from wqbkit.modules.competitions.Osmosis.osmosis_allocator_v3 import OsmosisAllocatorV3
+from wqbkit.modules.competitions.Osmosis.osmosis_clear_v3 import OsmosisClearV3
+from wqbkit.modules.competitions.Osmosis.osmosis_runner_v3 import OsmosisRunnerV3
 
 __all__ = [
     "__version__",
@@ -46,4 +49,9 @@ __all__ = [
     "AlphaDyeing",
     "SuperAlphaSimulator",
     "sc_send",
+    # Osmosis V3
+    "OsmosisAlphaSelectorV3",
+    "OsmosisAllocatorV3",
+    "OsmosisClearV3",
+    "OsmosisRunnerV3",
 ]

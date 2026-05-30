@@ -9,7 +9,9 @@ from wqbkit.app.core.alpha_base_core import AlphaBaseCore
 from wqbkit.app.core.wqb_urls import URL_ALPHA_PNL
 from wqbkit.app.database.alpha_db_manager import AlphaDBManager
 
-MAX_WORKERS: int = 10
+from wqbkit.app.config import config
+
+MAX_WORKERS: int = config.MAX_WORKERS
 RETENTION_YEARS: int = 4
 
 
@@ -167,40 +169,25 @@ class AlphaDbCore(AlphaBaseCore):
         
         return returns
 
-    def extract_tokens(
-            self,
-            expression: str
-        ) -> Tuple[List[str], List[str]]:
-            """
-            从 alpha 表达式中提取使用的算子和数据字段。
-            
-            Args:
-                expression: Alpha 表达式字符串
-                
-            Returns:
-                (operators, datafields): 使用的算子列表和数据字段列表
-            """
+    def extract_tokens(self, expression: str) -> Tuple[List[str], List[str]]:
+        """从 alpha 表达式中提取使用的算子和数据字段（增强版，带字段存在性校验）。
 
-            cnt = [
-                "market",
-                "sector",
-                "industry",
-                "subindustry",
-                'exchange',
-                'country',
-                'currency',
-            ]
-                
-            tokens = set(re.findall(r"[a-zA-Z0-9_.]+", expression))
-            
-            operators = [f for f in tokens if f in self.operators]
-            datafields = sorted([
-                f for f in [f for f in tokens if f not in self.operators]
-                if not f.isdigit() and len(f) >= 3 and f not in cnt
-                and self.dbmanager.field_check(f)
-            ])
-            
-            return operators, datafields
+        覆盖 AlphaBaseCore.extract_tokens，增加 dbmanager.field_check 过滤。
+        """
+        import re
+
+        cnt = [
+            "market", "sector", "industry", "subindustry",
+            "exchange", "country", "currency",
+        ]
+        tokens = set(re.findall(r"[a-zA-Z0-9_.]+", expression))
+        operators = [f for f in tokens if f in self.operators]
+        datafields = sorted([
+            f for f in tokens if f not in self.operators
+            and not f.isdigit() and len(f) >= 3 and f not in cnt
+            and self.dbmanager.field_check(f)
+        ])
+        return operators, datafields
     
     def expression_check(self, express, data_fields_used_list, operators_used_list):
         operators, datafields = self.extract_tokens(express)

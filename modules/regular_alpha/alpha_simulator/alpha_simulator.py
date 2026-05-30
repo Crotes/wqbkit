@@ -2,7 +2,7 @@ import signal
 import json
 import os
 
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
 from time import sleep
 from typing import Optional, List, Dict, Tuple

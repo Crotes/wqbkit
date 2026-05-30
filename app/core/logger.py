@@ -3,7 +3,6 @@
 """
 import logging
 import sys
-from datetime import datetime
 from logging.handlers import TimedRotatingFileHandler
 from pathlib import Path
 
@@ -42,9 +41,8 @@ def get_logger(name: str) -> logging.Logger:
     
     # 2. 文件处理器 (带自动轮转)
     try:
-        # 获取项目根目录: app/core/logger.py -> app/core -> app -> root
-        project_root = Path(__file__).resolve().parents[2]
-        log_dir = project_root / 'logs' / name
+        # 日志写到工程根目录 logs/ 下
+        log_dir = config.LOGS_DIR / name
         log_dir.mkdir(parents=True, exist_ok=True)
         
         # 使用 TimedRotatingFileHandler 实现按天轮转

@@ -7,11 +7,11 @@ from typing import Dict, List
 from wqb import NULL, FilterRange
 
 from wqbkit.app.core import AlphaBaseCore
+from wqbkit.app.config import config
 
-DEFAULT_CONSULTANT_DAY = "2025-04-19"
 DEFAULT_REGION = "USA"
 COLORS_TO_ASSIGN = [NULL, "RED", "YELLOW", "GREEN", "BLUE", "PURPLE"]
-DEFAULT_MAX_WORKERS = 3
+DEFAULT_MAX_WORKERS = config.DEFAULT_DYEING_WORKERS
 
 
 class AlphaDyeing(AlphaBaseCore):
@@ -71,7 +71,7 @@ class AlphaDyeing(AlphaBaseCore):
             self.logger.error(f"获取 Alpha 列表时发生异常: {e}")
             return []
 
-    def alpha_random_color(self, target_region: str = DEFAULT_REGION, begin_date: str = DEFAULT_CONSULTANT_DAY) -> None:
+    def alpha_random_color(self, target_region: str = DEFAULT_REGION, begin_date: str = config.DEFAULT_CONSULTANT_DAY) -> None:
         end_date_obj = datetime.now() + timedelta(days=1)
         end_date = end_date_obj.strftime("%Y-%m-%d")
 

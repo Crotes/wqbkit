@@ -10,9 +10,11 @@ import pandas as pd
 from tqdm import tqdm
 
 from wqbkit.app.core.alpha_db_core import AlphaDbCore
-from wqbkit.app.database.alpha_db_manager import AlphaDBManager
 
-MAX_WORKERS: int = 10
+
+from wqbkit.app.config import config, DATA_DIR
+
+MAX_WORKERS: int = config.MAX_WORKERS
 DEFAULT_CORR_THRESHOLD: float = 0.7
 CACHE_VALID_DAYS: int = 7
 PICKLE_SUFFIX = ".pickle"
@@ -29,7 +31,7 @@ class AlphaCalcCorr(AlphaDbCore):
     def __init__(self) -> None:
         super().__init__()
 
-        self.data_path = (Path(__file__).parent / "data").absolute()
+        self.data_path = (DATA_DIR / "correlation").absolute()
         self.check_path()
 
         self.alpha_ids, self.ppac_alpha_ids = self.get_active_alphas()

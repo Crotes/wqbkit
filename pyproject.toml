@@ -4,11 +4,11 @@ build-backend = "hatchling.build"
 
 [project]
 name = "wqbkit"
-version = "0.2.2"
+version = "0.2.5"
 description = "WorldQuant Brain Alpha Research Automation Toolkit"
 readme = "README.md"
 requires-python = ">=3.10"
-license = {text = "MIT"}
+license = {file = "LICENSE"}
 authors = [
     {name = "Crotes", email = "Crotes@yeah.net"},
 ]
@@ -37,7 +37,6 @@ dependencies = [
     "pandas",
     "numpy",
     "scipy",
-    "scikit-learn",
     "requests",
     "python-dotenv",
     "tqdm",
@@ -52,10 +51,5 @@ Homepage = "https://github.com/Crotes/wqbkit"
 Issues = "https://github.com/Crotes/wqbkit/issues"
 
 [tool.hatch.build.targets.wheel]
-packages = ["wqbkit"]
+force-include = {"__init__.py" = "wqbkit/__init__.py", "app" = "wqbkit/app", "modules" = "wqbkit/modules"}
 
-[tool.hatch.build.targets.sdist]
-include = [
-    "/wqbkit",
-    "/README.md",
-]

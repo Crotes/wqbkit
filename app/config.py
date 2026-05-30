@@ -1,8 +1,14 @@
 import os
+from pathlib import Path
 
 from dotenv import load_dotenv
 
 load_dotenv()
+
+# 项目根目录（wqbkit/app/config.py -> app -> wqbkit -> root）
+PROJECT_ROOT: Path = Path(__file__).resolve().parents[2]
+DATA_DIR: Path = PROJECT_ROOT / "data"
+LOGS_DIR: Path = PROJECT_ROOT / "logs"
 
 
 class Config:
@@ -16,7 +22,7 @@ class Config:
 
     WQB_USERNAME: str = os.getenv("WQB_USERNAME", "")
     WQB_PASSWORD: str = os.getenv("WQB_PASSWORD", "")
-    WQB_API_BASE_URL: str = os.getenv("WQB_API_BASE_URL", "https://www.worldquantbrain.com")
+    WQB_API_BASE_URL: str = os.getenv("WQB_API_BASE_URL", "https://api.worldquantbrain.com")
 
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
 
@@ -25,6 +31,17 @@ class Config:
 
     BARK_KEY: str = os.getenv("BARK_KEY", "")
     BARK_BASE_URL: str = os.getenv("BARK_BASE_URL", "https://api.day.app")
+
+    DEFAULT_CONSULTANT_DAY: str = os.getenv("DEFAULT_CONSULTANT_DAY", "2025-04-19")
+
+    # -------------------------------------------------------------------------
+    # 应用级统一常量（非 env，集中管理以避免跨模块重复硬编码）
+    # -------------------------------------------------------------------------
+    MAX_WORKERS: int = 10
+    TOTAL_SCORE: int = 100_000
+    DEFAULT_PAGE_LIMIT: int = 100
+    DEFAULT_PAGE_OFFSET: int = 0
+    DEFAULT_DYEING_WORKERS: int = 3
 
     @property
     def DATABASE_URI(self) -> str:

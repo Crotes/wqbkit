@@ -4,8 +4,10 @@ WorldQuant Brain API URL 定义
 它与 `wqb` 库定义对齐，并包含项目特定的扩展。
 """
 
+from wqbkit.app.config import config
+
 # 基础 URL
-HOST = "https://api.worldquantbrain.com"
+HOST = config.WQB_API_BASE_URL
 WQB_API_URL = HOST
 
 # -----------------------------------------------------------------------------

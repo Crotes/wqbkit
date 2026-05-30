@@ -3,8 +3,7 @@ WorldQuant Brain Alpha 交互的核心功能。
 包括认证、带重试的请求处理和基本的 Alpha 管理。
 """
 import time
-from enum import Enum
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 import requests
 from wqb import NULL, WQBSession
@@ -171,6 +170,54 @@ class AlphaBaseCore:
         resp = self.wqbs.search_operators(log=None)
         self.operators = set([item['name'] for item in resp.json() if 'REGULAR' in item['scope']])
 
+    def analyze_alpha_expressions(
+        self,
+        start_date: datetime,
+        end_date: datetime,
+        stage: str = "OS",
+        alpha_type: str = "REGULAR",
+    ) -> tuple[set, set, set]:
+        """获取指定日期范围内的 Alpha 表达式，并提取使用的算子和数据字段。
+
+        Args:
+            start_date: 起始日期
+            end_date: 结束日期
+            stage: Alpha 阶段，默认 "OS"（已提交）
+            alpha_type: Alpha 类型，默认 "REGULAR"
+
+        Returns:
+            (operators_used, operators_not_used, data_fields_used)
+        """
+        from wqb import FilterRange
+
+        resps = self.wqbs.filter_alphas(
+            others=[f"stage={stage}"],
+            delay=1,
+            date_submitted=FilterRange.from_str(
+                f"[{start_date.isoformat()}, {end_date.isoformat()})"
+            ),
+            log=None,
+        )
+
+        expression_list = []
+        for resp in resps:
+            data = resp.json().get("results", [])
+            for alpha in data:
+                if alpha.get("type", "") != alpha_type:
+                    continue
+                expression = alpha.get("regular", {}).get("code")
+                if expression:
+                    expression_list.append(expression)
+
+        operators_used = set()
+        data_fields_used = set()
+        for expr in expression_list:
+            ops, fields = self.extract_tokens(expr)
+            operators_used.update(ops)
+            data_fields_used.update(fields)
+
+        operators_not_used = self.operators - operators_used
+        return operators_used, operators_not_used, data_fields_used
 
     def get_current_quarter_range(self):
         """
@@ -180,14 +227,15 @@ class AlphaBaseCore:
         tz = timezone(timedelta(hours=-5))  # UTC-05:00
         now = datetime.now(tz)
         current_month = now.month
-        # 计算当前季度第一个月
         first_month_of_quarter = 3 * ((current_month - 1) // 3) + 1
-        start_date = now.replace(month=first_month_of_quarter, day=1,
-                            hour=0, minute=0, second=0, microsecond=0)
-        # 计算下一季度第一天
+        start_date = now.replace(
+            month=first_month_of_quarter, day=1,
+            hour=0, minute=0, second=0, microsecond=0
+        )
         next_quarter_first_month = first_month_of_quarter + 3
         if next_quarter_first_month > 12:
             end_date = start_date.replace(year=start_date.year + 1, month=1, day=1)
         else:
             end_date = start_date.replace(month=next_quarter_first_month, day=1)
         return start_date, end_date
+
