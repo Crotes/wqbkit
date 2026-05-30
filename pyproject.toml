@@ -36,6 +36,7 @@ dependencies = [
     "pandas",
     "numpy",
     "scipy",
+    "scikit-learn",
     "requests",
     "python-dotenv",
     "tqdm",
