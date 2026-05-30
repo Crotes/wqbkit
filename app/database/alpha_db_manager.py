@@ -11,9 +11,11 @@ from sqlalchemy.dialects.postgresql import insert
 from wqbkit.app.database.schemas import FactorData, SimulationData, TaskData
 
 # 本地模块
+from wqbkit.app.config import config
+
 from .db_models import (
     AlphaCorr, AlphaFactor, AlphaPnl, AlphaSimulated,
-    AlphaTask, Session, SuperAlpha, FieldCategory
+    AlphaTask, get_session_factory, SuperAlpha, FieldCategory
 )
 
 # 配置日志
@@ -41,7 +43,11 @@ class AlphaDBManager:
 
     def __init__(self) -> None:
         """初始化数据库会话工厂，绑定到 SQLAlchemy 引擎。"""
-        self._session_factory = scoped_session(sessionmaker(bind=Session().bind))
+        if not config.ENABLE_DATABASE:
+            raise RuntimeError(
+                "Database is disabled. Set WQB_ENABLE_DATABASE=true in .env to enable DB features."
+            )
+        self._session_factory = scoped_session(sessionmaker(bind=get_session_factory().bind))
     
     @contextmanager
     def session_scope(self) -> Generator[SQLAlchemySession, None, None]:

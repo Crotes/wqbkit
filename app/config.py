@@ -14,6 +14,11 @@ LOGS_DIR: Path = PROJECT_ROOT / "logs"
 class Config:
     """应用配置，统一读取环境变量。"""
 
+    # -------------------------------------------------------------------------
+    # 数据库开关（设为 false 可完全禁用数据库功能，避免强制连接 PostgreSQL）
+    # -------------------------------------------------------------------------
+    ENABLE_DATABASE: bool = os.getenv("WQB_ENABLE_DATABASE", "true").lower() in ("true", "1", "yes")
+
     DB_HOST: str = os.getenv("DB_HOST", "localhost")
     DB_PORT: str = os.getenv("DB_PORT", "5432")
     DB_NAME: str = os.getenv("DB_NAME", "WorldQuant")

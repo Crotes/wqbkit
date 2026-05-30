@@ -17,29 +17,24 @@ DB_URI = config.DATABASE_URI
 
 Base = declarative_base()
 
+_engine = None
+_Session = None
+
 
 def get_engine() -> Engine:
-    """获取数据库引擎（懒加载）
-    
-    Returns:
-        Engine: SQLAlchemy 数据库引擎
-    """
-    return create_engine(DB_URI, echo=False)
+    """获取数据库引擎（懒加载）"""
+    global _engine
+    if _engine is None:
+        _engine = create_engine(DB_URI, echo=False)
+    return _engine
 
 
 def get_session_factory() -> sessionmaker:
-    """获取会话工厂（懒加载）
-    
-    Returns:
-        sessionmaker: SQLAlchemy 会话工厂
-    """
-    engine = get_engine()
-    return sessionmaker(bind=engine)
-
-
-# 为了兼容现有代码，暂时保留这些变量，但建议逐步迁移到使用 get_session_factory
-engine = get_engine()
-Session = sessionmaker(bind=engine)
+    """获取会话工厂（懒加载）"""
+    global _Session
+    if _Session is None:
+        _Session = sessionmaker(bind=get_engine())
+    return _Session
 
 
 class AlphaFactor(Base):
