@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "wqb-toolkit"
+name = "wqbkit"
 version = "0.1.0"
 description = "WorldQuant Brain Alpha Research Automation Toolkit"
 readme = "README.md"
@@ -46,8 +46,8 @@ dependencies = [
 dev = ["pytest", "jupyter", "matplotlib"]
 
 [project.urls]
-Homepage = "https://github.com/Crotes/wqb-toolkit"
-Issues = "https://github.com/Crotes/wqb-toolkit/issues"
+Homepage = "https://github.com/Crotes/wqbkit"
+Issues = "https://github.com/Crotes/wqbkit/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["wqbkit"]
