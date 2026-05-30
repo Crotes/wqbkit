@@ -7,7 +7,6 @@ from threading import current_thread, Event
 import pytz
 from wqb import FilterRange
 
-from wqbkit.app.config import config
 from wqbkit.app.core import AlphaBaseCore, retry_decorator
 from wqbkit.app.core.wqb_urls import URL_SIMULATIONS
 from wqbkit.app.database import AlphaDBManager, Status
@@ -35,7 +34,7 @@ class SuperAlphaSimulator(AlphaBaseCore):
         super().__init__()
         self.max_concurrent = self.MAX_CONCURRENT_TASKS
 
-        self.dbmanager = AlphaDBManager() if config.ENABLE_DATABASE else None
+        self.dbmanager = AlphaDBManager()
 
         self.LOG_PREFIX_MAIN = "[主线程]"
         self.LOG_PREFIX_SIM = "[模拟线程-{}]"
@@ -73,8 +72,7 @@ class SuperAlphaSimulator(AlphaBaseCore):
 
             self.logger.info(f'{log_prefix} {simulation_progress_url}') 
         except Exception as e:
-            if self.dbmanager is not None:
-                self.dbmanager.superalpha_update_status(alpha_db_id, Status.PENDING)
+            self.dbmanager.superalpha_update_status(alpha_db_id, Status.PENDING) 
             self.logger.error(f'{log_prefix} 提交模拟请求失败: {e}, 等待重试')
             if self.shutdown_event.wait(self.RETRY_WAIT_SECONDS):
                 return
@@ -98,16 +96,14 @@ class SuperAlphaSimulator(AlphaBaseCore):
                 info = simulation_progress.json()
                 if info.get('status') == 'ERROR':
                     self.logger.error(f'{log_prefix} 模拟状态为 ERROR')
-                    if self.dbmanager is not None:
-                        self.dbmanager.superalpha_update_status(alpha_db_id, Status.FAILED)
+                    self.dbmanager.superalpha_update_status(alpha_db_id, Status.FAILED)
                     return
 
                 try:
                     alpha_id = info.get('alpha')
-                    if self.dbmanager is not None:
-                        self.dbmanager.superalpha_update_alpha_id(alpha_db_id, alpha_id)
-                        self.dbmanager.superalpha_update_status(alpha_db_id, Status.SUCCESS)
-                        self.dbmanager.superalpha_update_timeuse(alpha_db_id, time_elapsed)
+                    self.dbmanager.superalpha_update_alpha_id(alpha_db_id, alpha_id)
+                    self.dbmanager.superalpha_update_status(alpha_db_id, Status.SUCCESS)
+                    self.dbmanager.superalpha_update_timeuse(alpha_db_id, time_elapsed)
 
                     self.update_alpha_metadata(alpha_id, 'own')
 
@@ -180,7 +176,7 @@ class SuperAlphaSimulator(AlphaBaseCore):
                         continue
                     
                     # 从数据库中提取一个superalpha
-                    alpha = self.dbmanager.superalpha_get_pending() if self.dbmanager is not None else None
+                    alpha = self.dbmanager.superalpha_get_pending()
 
                     # 如果shutdown被触发（可能在wait期间），则停止提交新任务
                     if self.shutdown_event.is_set():

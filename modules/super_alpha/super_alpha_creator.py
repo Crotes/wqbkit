@@ -1,6 +1,5 @@
 from itertools import product
 from typing import Any, Dict, List
-from wqbkit.app.config import config
 from wqbkit.app.database import AlphaDBManager
 
 
@@ -52,7 +51,7 @@ REGIONS = {
 class SuperAlphaCreator:
     def __init__(self, region: str) -> None:
         """初始化 SUPER Alpha 生成器，指定目标地区。"""
-        self.dbmanager = AlphaDBManager() if config.ENABLE_DATABASE else None
+        self.dbmanager = AlphaDBManager()
         self.neutralizations = NEUTRALIZATIONS
         self.datacategories = DATACATEGORIES
         self.delay = DEFAULT_DELAY
