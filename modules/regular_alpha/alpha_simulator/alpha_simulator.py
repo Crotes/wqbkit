@@ -334,7 +334,7 @@ class AlphaSimulator(AlphaDbCore):
                 
                 if status == "ERROR":
                     self.logger.error(f"{log_prefix} {simulation_progress_url} 模拟出错")
-                    if factor_id_list:
+                    if factor_id_list and self.dbmanager is not None:
                         self.dbmanager.alphafactor_bulk_update_status(factor_id_list, Status.FAILED)
                     return False, None
                 
@@ -348,7 +348,7 @@ class AlphaSimulator(AlphaDbCore):
                 if (timeuse // 60 >= 60) or (timeuse // 60 >= 10 and progress == 0.1):
                     self.delete(simulation_progress_url)
                     self.logger.error(f"{log_prefix} 模拟超时, 已删除模拟任务")
-                    if factor_id_list:
+                    if factor_id_list and self.dbmanager is not None:
                         self.dbmanager.alphafactor_bulk_update_status(factor_id_list, Status.WARNING)
                     return False, None
                 
@@ -392,7 +392,8 @@ class AlphaSimulator(AlphaDbCore):
         except Exception as e:
             if hasattr(e, 'response') and e.response.status_code == 429:
                  pass # Rate limit handling logic if needed
-            self.dbmanager.alphafactor_update_status(alpha_data.factor_id, Status.PENDING)
+            if self.dbmanager is not None:
+                self.dbmanager.alphafactor_update_status(alpha_data.factor_id, Status.PENDING)
             self.logger.error(f"{log_prefix} 本次模拟失败: {e}, 等待300秒")
             sleep(300)
 
@@ -436,7 +437,8 @@ class AlphaSimulator(AlphaDbCore):
             if hasattr(e, 'response') and e.response.status_code == 429:
                  # Rate limit handling logic...
                  pass # Simplified for brevity, retaining original logic structure if needed
-            self.dbmanager.alphafactor_bulk_update_status(factor_id_list, Status.WARNING)
+            if self.dbmanager is not None:
+                self.dbmanager.alphafactor_bulk_update_status(factor_id_list, Status.WARNING)
             self.logger.error(f"{log_prefix} 本次模拟失败: {e}, 等待300秒")
             sleep(300)
 
@@ -480,10 +482,11 @@ class AlphaSimulator(AlphaDbCore):
             simulation_result.generation = factor_info.generation
             simulation_result.tag = factor_info.tag
 
-            self.dbmanager.alphasimulated_insert(simulation_result)
+            if self.dbmanager is not None:
+                self.dbmanager.alphasimulated_insert(simulation_result)
 
             # 模拟反转逻辑
-            if simulation_result.sharpe <= -0.5:
+            if simulation_result.sharpe <= -0.5 and self.dbmanager is not None:
                 self.dbmanager.alphafactor_insert(FactorData(
                     factor_id=None,
                     pre=factor_info.pre,
@@ -506,7 +509,7 @@ class AlphaSimulator(AlphaDbCore):
             neut_base = neutralization_settings.get(factor_info.region).get('base')
             neut_other = neutralization_settings.get(factor_info.region).get('other')
 
-            if simulation_result.sharpe >= 1 and factor_info.neutralization == neut_base:
+            if simulation_result.sharpe >= 1 and factor_info.neutralization == neut_base and self.dbmanager is not None:
                 self.dbmanager.alphafactor_bulk_insert([
                     FactorData(
                         factor_id=None,
@@ -526,7 +529,7 @@ class AlphaSimulator(AlphaDbCore):
             # Decay 衍生逻辑
             decays_base = 4
             decays_other = [1, 2, 8, 16, 32, 64, 128, 256]
-            if simulation_result.fail_num == 0 and simulation_result.decay == decays_base:
+            if simulation_result.fail_num == 0 and simulation_result.decay == decays_base and self.dbmanager is not None:
                 self.dbmanager.alphafactor_bulk_insert([
                     FactorData(
                         factor_id=None,
@@ -577,7 +580,8 @@ class AlphaSimulator(AlphaDbCore):
                     url = f"{URL_SIMULATIONS}/{children}"
                     self._process_single_result(url, alpha_to_info, log_prefix)
 
-                self.dbmanager.alphafactor_bulk_update_status(factor_id_list, Status.SUCCESS)
+                if self.dbmanager is not None:
+                    self.dbmanager.alphafactor_bulk_update_status(factor_id_list, Status.SUCCESS)
 
                 timeuse = (datetime.now() - time_start).seconds
                 self.logger.info(f"{log_prefix} 处理完成来自线程-{orig_thread_num}的模拟结果, 耗时 {timeuse // 60} 分 {timeuse % 60} 秒")
@@ -636,16 +640,17 @@ class AlphaSimulator(AlphaDbCore):
                     else:
                         self.logger.info(f"{self.LOG_PREFIX_MAIN} 今日模拟次数已达上限，等待1小时后继续")
                         self.simulate_shutdown_event.wait(1800)
-                        status, msg = self.dbmanager.alphafactor_reset_status()
-                        if status:
-                            self.logger.info('alpha_factors 数据库刷新成功')
-                        else:
-                            self.logger.error(f'alpha_factors 数据库刷新失败，失败原因 {msg}')
+                        if self.dbmanager is not None:
+                            status, msg = self.dbmanager.alphafactor_reset_status()
+                            if status:
+                                self.logger.info('alpha_factors 数据库刷新成功')
+                            else:
+                                self.logger.error(f'alpha_factors 数据库刷新失败，失败原因 {msg}')
                     continue
 
                 # 从数据库中提取一批alpha
                 self.logger.info(f"{self.LOG_PREFIX_MAIN} 寻找一批次alpha")
-                alpha_list = self.dbmanager.alphafactor_get_by_priority_and_time(limit=self.limit_of_children_simulations)
+                alpha_list = self.dbmanager.alphafactor_get_by_priority_and_time(limit=self.limit_of_children_simulations) if self.dbmanager is not None else []
 
                 # 如果shutdown被触发（可能在wait期间），则停止提交新任务
                 if self.simulate_shutdown_event.is_set():
@@ -672,8 +677,9 @@ class AlphaSimulator(AlphaDbCore):
                         f"{self.LOG_PREFIX_MAIN} 当前已占用 {used_slots}/{self.max_concurrent}，"
                         f"新任务需要 {task_cost} 个线程额度，打回数据库并等待"
                     )
-                    for task in alpha_list:
-                        self.dbmanager.alphafactor_update_status(task.factor_id, Status.PENDING)
+                    if self.dbmanager is not None:
+                        for task in alpha_list:
+                            self.dbmanager.alphafactor_update_status(task.factor_id, Status.PENDING)
                     self.simulate_shutdown_event.wait(30)
                     continue
 

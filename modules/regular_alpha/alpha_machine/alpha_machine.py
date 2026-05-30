@@ -40,6 +40,8 @@ class AlphaMachine(AlphaDbCore):
         operators_all: Set[str],
     ) -> List[str]:
         """提取 Alpha 表达式的数据字段和算子，更新到全局集合中。"""
+        if self.dbmanager is None:
+            return []
         expr = self.dbmanager.alphasimulated_get_by_alpha_id(alpha_id).expression
         operators_used, data_fields_used = self.extract_tokens(expr)
         data_fields_all.update(data_fields_used)
@@ -126,6 +128,8 @@ class AlphaMachine(AlphaDbCore):
                     break
                     
                 alpha_id = dont_select[i]
+                if self.dbmanager is None:
+                    continue
                 expr = self.dbmanager.alphasimulated_get_by_alpha_id(alpha_id).expression
                 operators_used, data_fields_used = self.extract_tokens(expr)
                 
@@ -172,6 +176,8 @@ class AlphaMachine(AlphaDbCore):
     def prune_corration(self, task_id: int, pnl_clear: bool) -> List[str]:
         """剪枝管线：表现筛选 → 表达式去重 → 多维度低相关筛选。"""
         # 获取 alpha 数据
+        if self.dbmanager is None:
+            return []
         alpha_data = self.dbmanager.alphasimulated_get_by_task_id(task_id)
 
         # 获取 alpha_id
@@ -226,7 +232,7 @@ class AlphaMachine(AlphaDbCore):
             threshold=self.CORRELATION_THRESHOLD,
         )
 
-        if pnl_clear:
+        if pnl_clear and self.dbmanager is not None:
             self.dbmanager.alphapnl_delete([alpha.alpha_id for alpha in alpha_info])
 
         return list(set(selected_alphas1 + selected_alphas2 + selected_alphas3 + selected_alphas4))
@@ -253,6 +259,8 @@ class AlphaMachine(AlphaDbCore):
         self.logger.info(f"生成 {len(expression_list)} 个{generation}阶alpha, 取{min(self.MAX_GENERATED, len(expression_list))}")
         expression_list = expression_list[: self.MAX_GENERATED]
 
+        if self.dbmanager is None:
+            return
         new_task_id = self.dbmanager.alphatask_insert(TaskData(
             pre=pre,
             name=name,
@@ -283,7 +291,8 @@ class AlphaMachine(AlphaDbCore):
                 tag=tag
             )
             factor_list.append(factor_data)
-        self.dbmanager.alphafactor_bulk_insert(factor_list)
+        if self.dbmanager is not None:
+            self.dbmanager.alphafactor_bulk_insert(factor_list)
 
     def machine(
         self,
@@ -295,6 +304,8 @@ class AlphaMachine(AlphaDbCore):
         priority: Optional[int] = None,
     ) -> bool:
         """遗传迭代主入口：模拟完成 → 剪枝 → 生成下一代 → 提交新任务。"""
+        if self.dbmanager is None:
+            return False
         if task_id:
             task_data = self.dbmanager.alphatask_get_by_id(task_id)
         else:
@@ -317,7 +328,7 @@ class AlphaMachine(AlphaDbCore):
         selected_alphas = self.prune_corration(task_id, pnl_clear)
 
         # 获取剪枝后的alpha数据
-        expressions = [self.dbmanager.alphasimulated_get_by_alpha_id(alpha_id).expression for alpha_id in selected_alphas]
+        expressions = [self.dbmanager.alphasimulated_get_by_alpha_id(alpha_id).expression for alpha_id in selected_alphas] if self.dbmanager is not None else []
 
         self.logger.info(f"现在是第 {generation} 代，母数据有 {len(expressions)}个")
 
@@ -351,7 +362,8 @@ class AlphaMachine(AlphaDbCore):
             
             self._submit_generated_alphas(name, task_id, 2, expression_list, priority or 2, pre, region, universe, neutralization, decay, tag)
 
-        self.dbmanager.alphatask_mark_as_generated(task_id)
+        if self.dbmanager is not None:
+            self.dbmanager.alphatask_mark_as_generated(task_id)
         if generation == 3:
             # 三阶alpha不用生成新的alpha, 从已有因子中提取效果不错的因子
             pass

@@ -4,6 +4,7 @@ from typing import List, Optional, Tuple
 def extract_tokens(
     alpha: str,
     operators: List[str],
+    sep: Optional[List[str]] = None,
 ) -> Tuple[List[str], List[str]]:
     """
     从 alpha 表达式中提取使用的算子和数据字段。
