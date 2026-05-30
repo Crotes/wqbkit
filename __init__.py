@@ -11,7 +11,12 @@ if _env_path.exists():
 else:
     load_dotenv()
 
-__version__ = "0.3.1"
+from importlib.metadata import version, PackageNotFoundError
+
+try:
+    __version__ = version("wqbkit")
+except PackageNotFoundError:
+    __version__ = "0.0.0"
 
 # ---------- Public API ----------
 # 核心基础设施
