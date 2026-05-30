@@ -1,9 +1,9 @@
 from .alpha_dyeing import AlphaDyeing
 from .super_alpha_creator import SuperAlphaCreator
 
-from wqbkit.app.config import config
+from wqbkit.app.config import config, _DisabledDBClass
 
 if config.ENABLE_DATABASE:
     from .super_alpha_simulator import SuperAlphaSimulator
 else:
-    SuperAlphaSimulator = None  # type: ignore[assignment]
+    SuperAlphaSimulator = _DisabledDBClass  # type: ignore[misc]

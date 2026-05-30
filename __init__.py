@@ -18,7 +18,7 @@ try:
 except PackageNotFoundError:
     __version__ = "0.0.0"
 
-from wqbkit.app.config import config
+from wqbkit.app.config import config, _DisabledDBClass
 
 # ---------- Public API ----------
 # 核心基础设施（始终可用）
@@ -41,11 +41,11 @@ if config.ENABLE_DATABASE:
     from wqbkit.modules.competitions.Osmosis.osmosis_runner_v3 import OsmosisRunnerV3
 else:
     schemas = None  # type: ignore[assignment]
-    AlphaMachine = None  # type: ignore[assignment]
-    AlphaSimulator = None  # type: ignore[assignment]
-    SuperAlphaSimulator = None  # type: ignore[assignment]
-    OsmosisAlphaSelectorV3 = None  # type: ignore[assignment]
-    OsmosisRunnerV3 = None  # type: ignore[assignment]
+    AlphaMachine = _DisabledDBClass  # type: ignore[misc]
+    AlphaSimulator = _DisabledDBClass  # type: ignore[misc]
+    SuperAlphaSimulator = _DisabledDBClass  # type: ignore[misc]
+    OsmosisAlphaSelectorV3 = _DisabledDBClass  # type: ignore[misc]
+    OsmosisRunnerV3 = _DisabledDBClass  # type: ignore[misc]
 
 __all__ = [
     "__version__",

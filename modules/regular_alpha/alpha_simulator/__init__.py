@@ -1,6 +1,6 @@
-from wqbkit.app.config import config
+from wqbkit.app.config import config, _DisabledDBClass
 
 if config.ENABLE_DATABASE:
     from .alpha_simulator import AlphaSimulator
 else:
-    AlphaSimulator = None  # type: ignore[assignment]
+    AlphaSimulator = _DisabledDBClass  # type: ignore[misc]

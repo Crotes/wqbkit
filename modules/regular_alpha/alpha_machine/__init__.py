@@ -1,8 +1,8 @@
 from .alpha_generator import AlphaGenerator
 
-from wqbkit.app.config import config
+from wqbkit.app.config import config, _DisabledDBClass
 
 if config.ENABLE_DATABASE:
     from .alpha_machine import AlphaMachine
 else:
-    AlphaMachine = None  # type: ignore[assignment]
+    AlphaMachine = _DisabledDBClass  # type: ignore[misc]

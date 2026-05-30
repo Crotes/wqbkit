@@ -57,4 +57,13 @@ class Config:
         )
 
 
+class _DisabledDBClass:
+    """占位类：当数据库被禁用时，实例化会抛出清晰的错误提示。"""
+
+    def __init__(self, *args, **kwargs) -> None:
+        raise RuntimeError(
+            "Database is disabled. Set DB_ENABLE=true in .env to use this feature."
+        )
+
+
 config = Config()
