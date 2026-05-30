@@ -22,7 +22,7 @@ pip install wqb-toolkit
 
 - Python >= 3.10
 - PostgreSQL (for database features)
-- `wqb` SDK (WorldQuant Brain official SDK, install separately — not available on PyPI)
+- `wqb` SDK (WorldQuant Brain official SDK, install via pip)
 
 ## Quick Start
 
