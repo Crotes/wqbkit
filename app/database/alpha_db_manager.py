@@ -40,6 +40,7 @@ class AlphaDBManager:
     """Alpha 数据库管理器，提供对各类 Alpha 数据表的增删改查操作。"""
 
     def __init__(self) -> None:
+        """初始化数据库会话工厂，绑定到 SQLAlchemy 引擎。"""
         self._session_factory = scoped_session(sessionmaker(bind=Session().bind))
     
     @contextmanager
@@ -99,6 +100,7 @@ class AlphaDBManager:
             return None
 
     def _dedup_factor_data(self, data_list: List[FactorData]) -> List[FactorData]:
+        """按表达式+区域+universe+neutralization+decay+task_id+generation 去重。"""
         seen = set()
         result = []
 
@@ -914,6 +916,7 @@ class AlphaDBManager:
             return []
 
     def field_check(self, field: str) -> bool:
+        """检查字段是否存在于 FieldCategory 表中。"""
         try:
             with self.session_scope() as session:
                 count = session.query(FieldCategory).filter_by(field=field).count()

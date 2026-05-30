@@ -30,6 +30,7 @@ class SuperAlphaSimulator(AlphaBaseCore):
     NO_ALPHA_WAIT_SECONDS = 10
 
     def __init__(self):
+        """初始化 SUPER Alpha 模拟器。"""
         super().__init__()
         self.max_concurrent = self.MAX_CONCURRENT_TASKS
 
@@ -128,6 +129,7 @@ class SuperAlphaSimulator(AlphaBaseCore):
 
     @retry_decorator()
     def get_today_simulations_count(self) -> None:
+        """获取今日已创建的 SUPER Alpha 数量（用于限流判断）。"""
         ny_tz = pytz.timezone('America/New_York')
         today_start = datetime.now(ny_tz).replace(hour=0, minute=0, second=0, microsecond=0)
         tomorrow_start = today_start + timedelta(days=1)

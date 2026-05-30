@@ -22,9 +22,9 @@ class Config:
 
     WQB_USERNAME: str = os.getenv("WQB_USERNAME", "")
     WQB_PASSWORD: str = os.getenv("WQB_PASSWORD", "")
-    WQB_API_BASE_URL: str = os.getenv("WQB_API_BASE_URL", "https://api.worldquantbrain.com")
-
-    LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
+    # 内置常量，不再通过 .env 配置
+    WQB_API_BASE_URL: str = "https://api.worldquantbrain.com"
+    LOG_LEVEL: str = "INFO"
 
     MAX_RETRIES: int = int(os.getenv("MAX_RETRIES", "5"))
     RETRY_DELAY_BASE: int = int(os.getenv("RETRY_DELAY_BASE", "2"))
@@ -45,6 +45,7 @@ class Config:
 
     @property
     def DATABASE_URI(self) -> str:
+        """组合数据库连接 URI。"""
         return (
             f"postgresql://{self.DB_USER}:{self.DB_PASSWORD}"
             f"@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"

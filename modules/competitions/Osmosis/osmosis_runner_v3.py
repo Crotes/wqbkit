@@ -51,6 +51,7 @@ class OsmosisRunnerV3:
         allocator_config: Optional[Dict] = None,
         clear_config: Optional[Dict] = None,
     ):
+        """初始化 Osmosis 运行器 V3，组合 Selector / Allocator / Clearer。"""
         self.config = {**self.DEFAULT_CONFIG, **(config or {})}
         self.selector = OsmosisAlphaSelectorV3(config=selector_config)
         self.allocator = OsmosisAllocatorV3(config=allocator_config)

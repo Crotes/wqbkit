@@ -22,6 +22,7 @@ class FactorData:
     tag: str
 
     def __iter__(self) -> Iterator:
+        """将 dataclass 实例转为元组后返回迭代器。"""
         return iter(astuple(self))
 
 
@@ -52,6 +53,7 @@ class SimulationData:
     tag: str = ""
 
     def __iter__(self) -> Iterator:
+        """将 dataclass 实例转为元组后返回迭代器。"""
         return iter(astuple(self))
 
 
@@ -72,6 +74,7 @@ class TaskData:
     task_id: Optional[int] = None
 
     def __iter__(self) -> Iterator:
+        """将 dataclass 实例转为元组后返回迭代器。"""
         return iter(astuple(self))
 
 @dataclass(slots=True)

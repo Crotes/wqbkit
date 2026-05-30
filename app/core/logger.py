@@ -6,7 +6,7 @@ import sys
 from logging.handlers import TimedRotatingFileHandler
 from pathlib import Path
 
-from wqbkit.app.config import config
+from wqbkit.app.config import config, LOGS_DIR
 
 
 def get_logger(name: str) -> logging.Logger:
@@ -42,7 +42,7 @@ def get_logger(name: str) -> logging.Logger:
     # 2. 文件处理器 (带自动轮转)
     try:
         # 日志写到工程根目录 logs/ 下
-        log_dir = config.LOGS_DIR / name
+        log_dir = LOGS_DIR / name
         log_dir.mkdir(parents=True, exist_ok=True)
         
         # 使用 TimedRotatingFileHandler 实现按天轮转

@@ -42,3 +42,7 @@ URL_ALPHAS_ALPHAID_SUBMIT = 'http://api.worldquantbrain.com:443/alphas/{}/submit
 # -----------------------------------------------------------------------------
 # 用于 alpha_machine.py 和 alpha_calc_corr.py
 URL_ALPHA_PNL = URL_ALPHAS_ALPHAID + "/recordsets/pnl"
+
+# 用于 alpha_base_core.py get_pyramids
+URL_USERS_SELF_ACTIVITIES = URL_USERS_SELF + '/activities'
+URL_USERS_SELF_ACTIVITIES_PYRAMID_ALPHAS = URL_USERS_SELF_ACTIVITIES + '/pyramid-alphas'

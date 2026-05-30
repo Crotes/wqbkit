@@ -69,6 +69,7 @@ class AlphaFactor(Base):
     )
 
     def __repr__(self) -> str:
+        """返回 AlphaFactor 实例的简短描述字符串。"""
         return f"<AlphaFactor(id={self.id}, expression={self.expression[:30]}...)>"
 
 
@@ -96,6 +97,7 @@ class AlphaSimulated(Base):
     tag = Column(Text, comment="Alpha tag")
 
     def __repr__(self) -> str:
+        """返回 AlphaSimulated 实例的简短描述字符串。"""
         return f"<AlphaSimulated(id={self.id}, alpha_id={self.alpha_id}, sharpe={self.sharpe})>"
 
 
@@ -126,6 +128,7 @@ class AlphaTask(Base):
     priority = Column(Integer, default=5, comment="优先级（5最低，0最高）")
 
     def __repr__(self) -> str:
+        """返回 AlphaTask 实例的简短描述字符串。"""
         return f"<AlphaTask(id={self.id}, name={self.name}, status={self.status})>"
 
 
@@ -145,6 +148,7 @@ class SuperAlpha(Base):
     fitness = Column(Float(53), comment="适应度")
 
     def __repr__(self) -> str:
+        """返回 SuperAlpha 实例的简短描述字符串。"""
         return f"<SuperAlpha(id={self.id}, alpha_id={self.alpha_id})>"
 
 
@@ -195,4 +199,5 @@ class FieldCategory(Base):
     )
 
     def __repr__(self) -> str:
+        """返回 FieldCategory 实例的简短描述字符串。"""
         return f"<FieldCategory(field={self.field}, region={self.region}, category={self.category})>"

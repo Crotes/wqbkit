@@ -28,8 +28,10 @@ def retry_decorator(
         Callable: 装饰后的函数
     """
     def decorator(func: Callable) -> Callable:
+        """接收被装饰函数，返回带重试逻辑的包装函数。"""
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
+            """执行被装饰函数，捕获指定异常并按指数退避策略重试。"""
             # 尝试获取 logger
             logger = logging.getLogger(func.__module__)
             if args and hasattr(args[0], 'logger'):

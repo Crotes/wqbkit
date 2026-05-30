@@ -50,6 +50,7 @@ REGIONS = {
 
 class SuperAlphaCreator:
     def __init__(self, region: str) -> None:
+        """初始化 SUPER Alpha 生成器，指定目标地区。"""
         self.dbmanager = AlphaDBManager()
         self.neutralizations = NEUTRALIZATIONS
         self.datacategories = DATACATEGORIES
@@ -79,6 +80,7 @@ class SuperAlphaCreator:
         self._initialize_selections()
 
     def _initialize_selections(self) -> None:
+        """初始化 SUPER Alpha 的 selection 条件矩阵（按颜色 + 多种过滤条件组合）。"""
         for color in self.COLORS_TO_ASSIGN:
             base_cond = f"own && (color != '{color}')"
             
@@ -109,6 +111,7 @@ class SuperAlphaCreator:
                     self.selections["POSITIVE"].append(base_cond)
 
     def creator(self) -> List[Dict[str, Any]]:
+        """生成 SUPER Alpha 的完整模拟配置列表（笛卡尔积组合）。"""
         sim_config_list: List[Dict[str, Any]] = []
 
         base_params = product(

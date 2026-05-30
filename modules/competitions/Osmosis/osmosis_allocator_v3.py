@@ -56,6 +56,7 @@ class OsmosisAllocatorV3(AlphaBaseCore):
     }
 
     def __init__(self, config: Optional[Dict] = None):
+        """初始化 Osmosis 资金分配器 V3。"""
         super().__init__()
         self.config = {**self.DEFAULT_CONFIG, **(config or {})}
         self.logger.info("OsmosisAllocatorV3 initialized")

@@ -43,6 +43,7 @@ class OsmosisClearV3(AlphaBaseCore):
     }
 
     def __init__(self, config: Optional[Dict] = None):
+        """初始化 Osmosis 清仓模块 V3。"""
         super().__init__()
         self.config = {**self.DEFAULT_CONFIG, **(config or {})}
         self.logger.info("OsmosisClearV3 initialized")

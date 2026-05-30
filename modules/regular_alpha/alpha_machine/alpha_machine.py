@@ -20,6 +20,7 @@ class AlphaMachine(AlphaDbCore):
     MAX_GENERATED = 15000
 
     def __init__(self) -> None:
+        """初始化 Alpha 生成机：加载算子并初始化生成器。"""
         super().__init__()
         self.operators: List[str] = []
         self.all_operators: List[str] = []
@@ -27,6 +28,7 @@ class AlphaMachine(AlphaDbCore):
         self.generator = AlphaGenerator()
 
     def get_operator(self) -> None:
+        """加载 WQB 官方算子列表，区分 REGULAR scope 和全部算子。"""
         resp = self.wqbs.search_operators()
         self.operators = [item['name'] for item in resp.json() if 'REGULAR' in item['scope']]
         self.all_operators = [item['name'] for item in resp.json()]
@@ -37,6 +39,7 @@ class AlphaMachine(AlphaDbCore):
         data_fields_all: Set[str],
         operators_all: Set[str],
     ) -> List[str]:
+        """提取 Alpha 表达式的数据字段和算子，更新到全局集合中。"""
         expr = self.dbmanager.alphasimulated_get_by_alpha_id(alpha_id).expression
         operators_used, data_fields_used = self.extract_tokens(expr)
         data_fields_all.update(data_fields_used)
@@ -49,6 +52,7 @@ class AlphaMachine(AlphaDbCore):
         threshold: float,
         max_num: int,
     ) -> Tuple[List[str], List[str], Set[str], Set[str], pd.DataFrame]:
+        """第一轮筛选：贪心按相关性阈值选取 Alpha，阈值随选中数量动态下降。"""
         self.logger.info(f'默认选中 {alpha_ids[0]}')
         selected = [alpha_ids[0]]
         dont_select = []
@@ -102,6 +106,7 @@ class AlphaMachine(AlphaDbCore):
         operators_all: Set[str],
         alpha_returns: pd.DataFrame,
     ) -> List[str]:
+        """第二轮筛选：从被排斥的 Alpha 中按数据字段多样性补充选取。"""
         if len(selected) >= max_num or not dont_select:
             return selected
 
@@ -148,6 +153,7 @@ class AlphaMachine(AlphaDbCore):
         threshold: float = CORRELATION_THRESHOLD,
         max_num: int = MAX_SELECTED,
     ) -> List[str]:
+        """低相关性 Alpha 筛选入口：先按相关性阈值贪心选取。"""
         if len(alpha_ids) == 0:
             return []
         self.logger.info(f"开始处理{len(alpha_ids)}个alpha...")
@@ -164,6 +170,7 @@ class AlphaMachine(AlphaDbCore):
         return selected
 
     def prune_corration(self, task_id: int, pnl_clear: bool) -> List[str]:
+        """剪枝管线：表现筛选 → 表达式去重 → 多维度低相关筛选。"""
         # 获取 alpha 数据
         alpha_data = self.dbmanager.alphasimulated_get_by_task_id(task_id)
 
@@ -238,6 +245,7 @@ class AlphaMachine(AlphaDbCore):
         decay: int,
         tag: Optional[str],
     ) -> None:
+        """将生成的表达式列表批量插入数据库，创建新的模拟任务。"""
         if not expression_list:
             return
 
@@ -286,6 +294,7 @@ class AlphaMachine(AlphaDbCore):
         pnl_clear: bool = False,
         priority: Optional[int] = None,
     ) -> bool:
+        """遗传迭代主入口：模拟完成 → 剪枝 → 生成下一代 → 提交新任务。"""
         if task_id:
             task_data = self.dbmanager.alphatask_get_by_id(task_id)
         else:

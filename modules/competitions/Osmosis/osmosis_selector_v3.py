@@ -172,6 +172,7 @@ class OsmosisAlphaSelectorV3(AlphaCalcCorr):
     # 初始化
     # ------------------------------------------------------------------
     def __init__(self, config: Optional[Dict] = None):
+        """初始化 Osmosis Alpha 选择器 V3。"""
         super().__init__()
         self.config = {**self.DEFAULT_CONFIG, **(config or {})}
 
@@ -204,6 +205,7 @@ class OsmosisAlphaSelectorV3(AlphaCalcCorr):
     # 黑名单管理（继承 V2）
     # ==================================================================
     def _load_blacklist(self) -> set:
+        """从文件加载 Alpha 黑名单集合。"""
         if not self.blacklist_path.exists():
             return set()
         try:
@@ -215,6 +217,7 @@ class OsmosisAlphaSelectorV3(AlphaCalcCorr):
             return set()
 
     def _save_blacklist(self) -> None:
+        """将当前黑名单集合持久化到 JSON 文件。"""
         try:
             with open(self.blacklist_path, "w", encoding="utf-8") as f:
                 json.dump(
@@ -225,6 +228,7 @@ class OsmosisAlphaSelectorV3(AlphaCalcCorr):
             self.logger.error(f"保存黑名单失败: {e}")
 
     def add_to_blacklist(self, alpha_ids: Union[str, List[str]], reason: str = "") -> None:
+        """将一个或多个 Alpha ID 加入黑名单。"""
         if isinstance(alpha_ids, str):
             alpha_ids = [alpha_ids]
         alpha_ids = [aid for aid in alpha_ids if aid]
@@ -235,6 +239,7 @@ class OsmosisAlphaSelectorV3(AlphaCalcCorr):
         self.logger.info(f"Blacklist +{len(alpha_ids)} (reason={reason})")
 
     def remove_from_blacklist(self, alpha_ids: Union[str, List[str]]) -> None:
+        """将一个或多个 Alpha ID 从黑名单中移除。"""
         if isinstance(alpha_ids, str):
             alpha_ids = [alpha_ids]
         alpha_ids = [aid for aid in alpha_ids if aid in self.blacklist]
@@ -245,21 +250,25 @@ class OsmosisAlphaSelectorV3(AlphaCalcCorr):
         self.logger.info(f"Blacklist -{len(alpha_ids)}: {alpha_ids}")
 
     def clear_blacklist(self) -> None:
+        """清空黑名单并更新持久化文件。"""
         count = len(self.blacklist)
         self.blacklist.clear()
         self._save_blacklist()
         self.logger.info(f"Blacklist cleared ({count} items)")
 
     def is_blacklisted(self, alpha_id: str) -> bool:
+        """检查指定 Alpha ID 是否在黑名单中。"""
         return alpha_id in self.blacklist
 
     def list_blacklist(self) -> List[str]:
+        """返回已排序的黑名单 Alpha ID 列表。"""
         return sorted(list(self.blacklist))
 
     # ==================================================================
     # MaxTrade 映射表管理（V3 新增）
     # ==================================================================
     def _load_maxtrade_map(self) -> Dict[str, Dict]:
+        """从文件加载 MaxTradeOn 模拟状态映射表。"""
         if not self.maxtrade_path.exists():
             return {}
         try:
@@ -270,6 +279,7 @@ class OsmosisAlphaSelectorV3(AlphaCalcCorr):
             return {}
 
     def _save_maxtrade_map(self) -> None:
+        """将 MaxTradeOn 映射表持久化到 JSON 文件。"""
         try:
             with open(self.maxtrade_path, "w", encoding="utf-8") as f:
                 json.dump(self.maxtrade_map, f, indent=2, ensure_ascii=False)
@@ -298,15 +308,18 @@ class OsmosisAlphaSelectorV3(AlphaCalcCorr):
         self.logger.info(f"MaxTrade 映射表更新: {alpha_id} -> {has_maxTradeOn_sim}")
 
     def get_maxtrade_status(self, alpha_id: str) -> Dict:
+        """获取指定 Alpha ID 的 MaxTradeOn 模拟状态。"""
         return self.maxtrade_map.get(alpha_id, {"has_maxTradeOn_sim": False})
 
     # ==================================================================
     # 缓存管理（继承 V2 + 新增 yearly_stats 缓存）
     # ==================================================================
     def _cache_path(self, cache_type: str, key: str) -> Path:
+        """根据缓存类型和键生成本地缓存文件路径。"""
         return self.cache_dir / f"{cache_type}_{key}.pkl"
 
     def _load_cache(self, cache_type: str, key: str, max_age_minutes: int = 60) -> Optional[pd.DataFrame]:
+        """加载指定类型和键的本地缓存，若超时或不存在则返回 None。"""
         path = self._cache_path(cache_type, key)
         if not path.exists():
             return None
@@ -323,6 +336,7 @@ class OsmosisAlphaSelectorV3(AlphaCalcCorr):
             return None
 
     def _save_cache(self, cache_type: str, key: str, obj: pd.DataFrame) -> None:
+        """将对象序列化后保存到本地缓存文件。"""
         path = self._cache_path(cache_type, key)
         try:
             with open(path, "wb") as f:
@@ -331,6 +345,7 @@ class OsmosisAlphaSelectorV3(AlphaCalcCorr):
             self.logger.error(f"Cache save failed: {e}")
 
     def clear_cache(self, cache_type: Optional[str] = None) -> None:
+        """清空本地缓存文件，可按类型过滤或全部清空。"""
         removed = 0
         for path in self.cache_dir.glob("*.pkl"):
             if cache_type is None or path.name.startswith(f"{cache_type}_"):
@@ -340,9 +355,11 @@ class OsmosisAlphaSelectorV3(AlphaCalcCorr):
 
     # --- yearly-stats 缓存 ---
     def _yearly_stats_cache_path(self, alpha_id: str) -> Path:
+        """生成指定 Alpha ID 的年度统计缓存文件路径。"""
         return self.yearly_stats_dir / f"{alpha_id}.json"
 
     def _load_yearly_stats_cache(self, alpha_id: str, max_age_hours: int = 24) -> Optional[List[Dict]]:
+        """加载指定 Alpha ID 的年度统计缓存，若超时或不存在则返回 None。"""
         path = self._yearly_stats_cache_path(alpha_id)
         if not path.exists():
             return None
@@ -355,6 +372,7 @@ class OsmosisAlphaSelectorV3(AlphaCalcCorr):
             return None
 
     def _save_yearly_stats_cache(self, alpha_id: str, data: List[Dict]) -> None:
+        """将年度统计数据保存为指定 Alpha ID 的本地 JSON 缓存。"""
         path = self._yearly_stats_cache_path(alpha_id)
         try:
             with open(path, "w", encoding="utf-8") as f:
@@ -702,6 +720,7 @@ class OsmosisAlphaSelectorV3(AlphaCalcCorr):
 
         # 归一化 helper
         def _norm(val, vals):
+            """将 val 在 vals 范围内线性归一化到 [0, 1]，若范围无效则返回默认分值。"""
             mn, mx = min(vals), max(vals)
             if mx <= mn:
                 return cfg["uniqueness_default_score"]

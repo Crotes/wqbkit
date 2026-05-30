@@ -19,6 +19,7 @@ class AlphaDbCore(AlphaBaseCore):
     """Alpha PnL 数据访问与转换。"""
 
     def __init__(self) -> None:
+        """初始化数据库核心：继承基类登录会话并初始化数据库管理器。"""
         super().__init__()
         self.dbmanager = AlphaDBManager()
         self.retention_years = RETENTION_YEARS
@@ -82,6 +83,7 @@ class AlphaDbCore(AlphaBaseCore):
             with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
                 # 定义单个获取任务
                 def fetch_pnl(alpha_id):
+                    """并发任务：获取单个 Alpha 的 PnL 数据。"""
                     try:
                         url = URL_ALPHA_PNL.format(alpha_id)
                         response = self.get(url)
@@ -190,12 +192,28 @@ class AlphaDbCore(AlphaBaseCore):
         return operators, datafields
     
     def expression_check(self, express, data_fields_used_list, operators_used_list):
+        """检查表达式中是否有未使用的字段或算子。
+
+        Returns:
+            (has_unused_field, unused_fields, has_unused_operator, unused_operators)
+        """
         operators, datafields = self.extract_tokens(express)
         field_not_used = [field for field in datafields if field not in data_fields_used_list]
         operator_not_used = [op for op in operators if op not in operators_used_list]
         return len(field_not_used) != 0, field_not_used, len(operator_not_used) != 0, operator_not_used
 
     def tag_generator(self, alpha_id, region = None, expression = None, tags=None):
+        """根据 Alpha 表达式中的数据字段自动生成分类标签并更新到 WQB。
+
+        Args:
+            alpha_id: Alpha ID
+            region: 区域（为 None 时自动从 WQB 获取）
+            expression: 表达式（为 None 时自动从 WQB 获取）
+            tags: 现有标签列表，用于比对是否需要更新
+
+        Returns:
+            新生成的标签列表
+        """
         if region == None or expression == None:
             resp = self.wqbs.locate_alpha(alpha_id, log=None)
             data = resp.json()

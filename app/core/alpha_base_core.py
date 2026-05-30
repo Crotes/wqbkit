@@ -3,15 +3,16 @@ WorldQuant Brain Alpha 交互的核心功能。
 包括认证、带重试的请求处理和基本的 Alpha 管理。
 """
 import time
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict
 
 import requests
-from wqb import NULL, WQBSession
-from datetime import datetime, timedelta, timezone
+from wqb import NULL, WQBSession, FilterRange
 
 from wqbkit.app.config import config
 from wqbkit.app.core.decorators import retry_decorator
 from wqbkit.app.core.logger import get_logger
+from wqbkit.app.core.wqb_urls import URL_USERS_SELF_ACTIVITIES_PYRAMID_ALPHAS
 
 RETRY_AFTER_MIN_SECONDS: int = 10
 
@@ -19,6 +20,7 @@ class AlphaBaseCore:
     """WorldQuant Brain Alpha 交互的基类。"""
 
     def __init__(self) -> None:
+        """初始化基类：加载认证信息并建立 WQB 登录会话。"""
         self._username = config.WQB_USERNAME
         self._password = config.WQB_PASSWORD
         self.logger = get_logger(self.__class__.__name__)
@@ -99,7 +101,7 @@ class AlphaBaseCore:
             tag: Alpha标签
         """
         try:
-            if type (tag) != list:
+            if not isinstance(tag, list):
                 tags = [tag]
             else:
                 tags = tag
@@ -150,7 +152,7 @@ class AlphaBaseCore:
         Args:
             alpha_id: Alpha ID
         """
-        if type(alpha_ids) != list:
+        if not isinstance(alpha_ids, list):
             alpha_ids = [alpha_ids]
 
         for alpha_id in alpha_ids:
@@ -166,29 +168,46 @@ class AlphaBaseCore:
                 self.logger.error(f"{alpha_id}隐藏失败: {str(e)}")
                 raise
 
-    def get_operators(self):
+    def get_operators(self) -> None:
+        """加载 WQB 官方算子列表，筛选出 REGULAR scope 的算子集合。"""
         resp = self.wqbs.search_operators(log=None)
-        self.operators = set([item['name'] for item in resp.json() if 'REGULAR' in item['scope']])
+        self.operators = {item['name'] for item in resp.json() if 'REGULAR' in item['scope']}
+
+    def get_current_quarter_range(self) -> tuple[datetime, datetime]:
+        """
+        获取当前季度的起点和终点
+        返回 (start_date, end_date) 两个 datetime 对象，格式如 2025-01-28T00:00:00-05:00
+        """
+        tz = timezone(timedelta(hours=-5))  # UTC-05:00
+        now = datetime.now(tz)
+        current_month = now.month
+        first_month_of_quarter = 3 * ((current_month - 1) // 3) + 1
+        start_date = now.replace(
+            month=first_month_of_quarter, day=1,
+            hour=0, minute=0, second=0, microsecond=0
+        )
+        next_quarter_first_month = first_month_of_quarter + 3
+        if next_quarter_first_month > 12:
+            end_date = start_date.replace(year=start_date.year + 1, month=1, day=1)
+        else:
+            end_date = start_date.replace(month=next_quarter_first_month, day=1)
+        return start_date, end_date
 
     def analyze_alpha_expressions(
         self,
-        start_date: datetime,
-        end_date: datetime,
         stage: str = "OS",
         alpha_type: str = "REGULAR",
     ) -> tuple[set, set, set]:
         """获取指定日期范围内的 Alpha 表达式，并提取使用的算子和数据字段。
 
         Args:
-            start_date: 起始日期
-            end_date: 结束日期
             stage: Alpha 阶段，默认 "OS"（已提交）
             alpha_type: Alpha 类型，默认 "REGULAR"
 
         Returns:
             (operators_used, operators_not_used, data_fields_used)
         """
-        from wqb import FilterRange
+        start_date, end_date = self.get_current_quarter_range()
 
         resps = self.wqbs.filter_alphas(
             others=[f"stage={stage}"],
@@ -219,23 +238,29 @@ class AlphaBaseCore:
         operators_not_used = self.operators - operators_used
         return operators_used, operators_not_used, data_fields_used
 
-    def get_current_quarter_range(self):
-        """
-        获取当前季度的起点和终点
-        返回 (start_date, end_date) 两个 datetime 对象，格式如 2025-01-28T00:00:00-05:00
-        """
-        tz = timezone(timedelta(hours=-5))  # UTC-05:00
-        now = datetime.now(tz)
-        current_month = now.month
-        first_month_of_quarter = 3 * ((current_month - 1) // 3) + 1
-        start_date = now.replace(
-            month=first_month_of_quarter, day=1,
-            hour=0, minute=0, second=0, microsecond=0
-        )
-        next_quarter_first_month = first_month_of_quarter + 3
-        if next_quarter_first_month > 12:
-            end_date = start_date.replace(year=start_date.year + 1, month=1, day=1)
-        else:
-            end_date = start_date.replace(month=next_quarter_first_month, day=1)
-        return start_date, end_date
+    def get_uncompelete_pyramids(self) -> dict:
+        """获取当前季度内尚未达标的 pyramid 分类信息。
 
+        Returns:
+            {region: {delay: [category1, category2, ...]}}
+        """
+        start_date, end_date = self.get_current_quarter_range()
+        url = (
+            f"{URL_USERS_SELF_ACTIVITIES_PYRAMID_ALPHAS}"
+            f"?startDate={start_date.strftime('%Y-%m-%d')}"
+            f"&endDate={end_date.strftime('%Y-%m-%d')}"
+        )
+        resp = self.wqbs.get(url)
+        pyramids = resp.json()['pyramids']
+        pyramids_dict: dict = {}
+        for item in pyramids:
+            category = item['category']['name']
+            region = item['region']
+            delay = item['delay']
+            alpha_count = item['alphaCount']
+            if alpha_count < 3:
+                pyramids_dict.setdefault(region, {})
+                if delay not in pyramids_dict[region]:
+                    pyramids_dict[region][delay] = []
+                pyramids_dict[region][delay].append(category.replace(" ", ""))
+        return pyramids_dict

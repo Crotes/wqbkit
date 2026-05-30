@@ -29,6 +29,7 @@ class AlphaCalcCorr(AlphaDbCore):
     """Alpha 相关性计算。"""
 
     def __init__(self) -> None:
+        """初始化相关性计算模块，创建本地数据存储目录。"""
         super().__init__()
 
         self.data_path = (DATA_DIR / "correlation").absolute()
@@ -41,17 +42,20 @@ class AlphaCalcCorr(AlphaDbCore):
         self.load_data()
 
     def check_path(self) -> None:
+        """若数据缓存目录不存在则创建。"""
         if not os.path.exists(self.data_path):
             os.mkdir(self.data_path)
 
     @staticmethod
     def save_obj(obj: object, name: str) -> None:
+        """将对象序列化为 pickle 文件。"""
         file_path = f"{name}{PICKLE_SUFFIX}"
         with open(file_path, "wb") as file_handle:
             pickle.dump(obj, file_handle, pickle.HIGHEST_PROTOCOL)
 
     @staticmethod
     def load_obj(name: str) -> object:
+        """从 pickle 文件反序列化对象，失败返回 None。"""
         try:
             file_path = f"{name}{PICKLE_SUFFIX}"
             with open(file_path, "rb") as file_handle:
@@ -61,10 +65,12 @@ class AlphaCalcCorr(AlphaDbCore):
     
 
     def load_data(self) -> None:
+        """加载所有活跃 Alpha 的收益率数据到内存。"""
         self.alpha_returns = self.get_alpha_results([data["alpha_id"] for data in self.alpha_ids])
     
     
     def get_active_alphas(self) -> tuple[List[Dict[str, str]], List[Dict[str, str]]]:
+        """获取当前 OS 阶段的 Alpha 列表，区分普通 Alpha 和 PPAC Alpha，结果缓存到本地。"""
         alpha_ids = self.load_obj(self.data_path / "alpha_ids") or []
         ppac_alpha_ids = self.load_obj(self.data_path / "ppac_alpha_ids") or []
 
@@ -181,6 +187,7 @@ class AlphaCalcCorr(AlphaDbCore):
         self.alpha_ids_now = [aid for aid in self.alpha_ids_now if aid != exclude_id]
 
     def calculate(self, alpha: Union[str, List[str]], calc_type: str, skip_cache: bool = False, show_detail: bool = False) -> Dict[str, Optional[float]]:
+        """批量计算指定 Alpha 与当前池的相关性。"""
         if calc_type not in ["self", "ppac", "prod", "self_web"]:
             self.logger.error(f"不支持的计算类型: {calc_type}")
             return {}

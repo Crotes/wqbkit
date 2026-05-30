@@ -16,10 +16,12 @@ DEFAULT_MAX_WORKERS = config.DEFAULT_DYEING_WORKERS
 
 class AlphaDyeing(AlphaBaseCore):
     def __init__(self, max_workers: int = DEFAULT_MAX_WORKERS):
+        """初始化 Alpha 染色模块。"""
         super().__init__()
         self.max_workers = max_workers
 
     def up_alpha_properties(self, alpha_id: str, color: str = NULL) -> str:
+        """修改 Alpha 的颜色属性。"""
         try:
             resp = self.wqbs.patch_properties(
                 alpha_id,
@@ -38,6 +40,7 @@ class AlphaDyeing(AlphaBaseCore):
             return "FAILED"
 
     def get_submit_alphas(self, start_date: str, end_date: str, region: str) -> List[Dict[str, str]]:
+        """按日期范围和区域获取已提交的 REGULAR Alpha 列表。"""
         output: List[Dict[str, str]] = []
         self.logger.info(f"开始获取区域 {region} 从 {start_date} 到 {end_date} 的常规 Alpha...")
 
@@ -72,6 +75,7 @@ class AlphaDyeing(AlphaBaseCore):
             return []
 
     def alpha_random_color(self, target_region: str = DEFAULT_REGION, begin_date: str = config.DEFAULT_CONSULTANT_DAY) -> None:
+        """对指定区域内的 Alpha 随机均衡分配颜色（多线程）。"""
         end_date_obj = datetime.now() + timedelta(days=1)
         end_date = end_date_obj.strftime("%Y-%m-%d")
 

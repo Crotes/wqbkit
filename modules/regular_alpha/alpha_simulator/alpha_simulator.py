@@ -106,6 +106,7 @@ class AlphaSimulator(AlphaDbCore):
     }
 
     def combine_alpha(self, expression: str, region: str, universe: str, neutralization: str, decay: int, delay: int) -> Optional[Dict]:
+        """将表达式和设置组合为 WQB API 所需的 Alpha 请求体。"""
         settings = self.DEFAULT_SETTINGS.copy()
         settings.update({
             "region": region,
@@ -127,9 +128,11 @@ class AlphaSimulator(AlphaDbCore):
         return alpha
     
     def alpha_factor_key(self, alpha_factor_info: FactorData) -> Optional[str]:
+        """生成 Alpha 的唯一标识键（标准化后的表达式+设置拼接）。"""
         return self.normalize_alpha_string(f"{alpha_factor_info.pre}{alpha_factor_info.expression}{alpha_factor_info.region}{alpha_factor_info.universe}{alpha_factor_info.neutralization}{alpha_factor_info.decay}")
 
     def generate_alpha(self, alpha_list: List[FactorData]) -> Tuple[Optional[List[Dict]], Optional[Dict[str, FactorData]], Optional[List[int]]]:
+        """将 FactorData 列表去重并转换为 WQB 批量模拟请求体。"""
         try:
             alpha_to_info = {} 
             factor_id_list = []
@@ -291,8 +294,9 @@ class AlphaSimulator(AlphaDbCore):
 
 
     def check_zero(self, alpha_id: str) -> Optional[int]:
+        """检查 Alpha 近 5 年 yearly stats 是否有零值（fitness/sharpe 为 0）。"""
         resp = self.get(
-            f"https://api.worldquantbrain.com/alphas/{alpha_id}/recordsets/yearly-stats"
+            f"{config.WQB_API_BASE_URL}/alphas/{alpha_id}/recordsets/yearly-stats"
         )
         records = resp.json()["records"]
         for record in records[5:]:
@@ -308,6 +312,7 @@ class AlphaSimulator(AlphaDbCore):
         return self.check_zero(alpha_info.alpha_id)
 
     def _process_error_simulation(self, simulation_progress_url):
+        """处理模拟失败/错误状态的占位方法。"""
         pass
 
     def _wait_for_simulation(self, simulation_progress_url: str, log_prefix: str, factor_id_list: List[str] = None) -> Tuple[bool, Optional[str]]:
@@ -353,6 +358,7 @@ class AlphaSimulator(AlphaDbCore):
                     sleep(10)
 
     def single_simulate(self, alpha_data: FactorData):
+        """单 Alpha 模拟：提交单个 Alpha 到 WQB 并等待结果。"""
         thread_name = current_thread().name
         thread_num = int(thread_name.split("_")[1]) + 1
         log_prefix = self.LOG_PREFIX_SIM.format(thread_num)
@@ -391,6 +397,7 @@ class AlphaSimulator(AlphaDbCore):
             sleep(300)
 
     def multi_simulate(self, alpha_list_pre: List[FactorData]):
+        """批量 Alpha 模拟：提交组合 Alpha 到 WQB 并等待结果。"""
         thread_name = current_thread().name
         thread_num = int(thread_name.split("_")[1]) + 1
         log_prefix = self.LOG_PREFIX_SIM.format(thread_num)
@@ -586,6 +593,7 @@ class AlphaSimulator(AlphaDbCore):
         self.logger.info(f"{log_prefix} 退出")
     @retry_decorator()
     def get_today_simulations_count(self):
+        """获取今日已创建的 REGULAR Alpha 数量（用于限流判断）。"""
         ny_tz = pytz.timezone('America/New_York')
         today_start = datetime.now(ny_tz).replace(hour=0, minute=0, second=0, microsecond=0)
         tomorrow_start = today_start + timedelta(days=1)
