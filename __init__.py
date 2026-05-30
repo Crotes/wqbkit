@@ -11,7 +11,7 @@ if _env_path.exists():
 else:
     load_dotenv()
 
-__version__ = "0.2.5"
+__version__ = "0.3.1"
 
 # ---------- Public API ----------
 # 核心基础设施
