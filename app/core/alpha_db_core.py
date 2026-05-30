@@ -20,18 +20,16 @@ class AlphaDbCore(AlphaBaseCore):
 
     def __init__(self) -> None:
         """初始化数据库核心：继承基类登录会话并初始化数据库管理器。"""
-        if not config.ENABLE_DATABASE:
-            raise RuntimeError(
-                "Database is disabled. Set DB_ENABLE=true in .env to enable DB features."
-            )
         super().__init__()
-        self.dbmanager = AlphaDBManager()
+        self.dbmanager = AlphaDBManager() if config.ENABLE_DATABASE else None
         self.retention_years = RETENTION_YEARS
         self.get_operators()
 
     def _get_alpha_pnl(self, alpha_id: str) -> pd.DataFrame:
         """获取单个 Alpha 的 PnL 数据。"""
-        pnl_cache = self.dbmanager.alphapnl_get(alpha_id)
+        pnl_cache = None
+        if self.dbmanager is not None:
+            pnl_cache = self.dbmanager.alphapnl_get(alpha_id)
 
         if pnl_cache:
             pnl_data = json.loads(pnl_cache)
@@ -45,7 +43,8 @@ class AlphaDbCore(AlphaBaseCore):
                 return pd.DataFrame()
 
             pnl_data = response.json()
-            self.dbmanager.alphapnl_upsert(alpha_id, json.dumps(pnl_data))
+            if self.dbmanager is not None:
+                self.dbmanager.alphapnl_upsert(alpha_id, json.dumps(pnl_data))
 
         try:
             df = pd.DataFrame(
@@ -72,11 +71,12 @@ class AlphaDbCore(AlphaBaseCore):
             return pd.DataFrame()
             
         # 1. 批量查询缓存
-        try:
-            cached_pnls = self.dbmanager.alphapnl_bulk_get(alpha_ids)
-        except Exception as e:
-            self.logger.error(f"Error bulk getting PnL: {e}")
-            cached_pnls = {}
+        cached_pnls = {}
+        if self.dbmanager is not None:
+            try:
+                cached_pnls = self.dbmanager.alphapnl_bulk_get(alpha_ids)
+            except Exception as e:
+                self.logger.error(f"Error bulk getting PnL: {e}")
         
         # 找出未命中的 alpha_ids
         missing_ids = [aid for aid in alpha_ids if aid not in cached_pnls]
@@ -108,7 +108,7 @@ class AlphaDbCore(AlphaBaseCore):
                             new_pnls[alpha_id] = pnl_json
                         
             # 3. 批量更新缓存
-            if new_pnls:
+            if new_pnls and self.dbmanager is not None:
                 try:
                     self.dbmanager.alphapnl_bulk_upsert(new_pnls)
                 except Exception as e:
@@ -191,7 +191,7 @@ class AlphaDbCore(AlphaBaseCore):
         datafields = sorted([
             f for f in tokens if f not in self.operators
             and not f.isdigit() and len(f) >= 3 and f not in cnt
-            and self.dbmanager.field_check(f)
+            and (self.dbmanager is None or self.dbmanager.field_check(f))
         ])
         return operators, datafields
     
@@ -226,7 +226,7 @@ class AlphaDbCore(AlphaBaseCore):
         _, datafields = self.extract_tokens(expression)
         if not tags:
             tags = []
-        tags_new = [self.dbmanager.field_category_get(field, region) for field in datafields]
+        tags_new = [self.dbmanager.field_category_get(field, region) for field in datafields] if self.dbmanager is not None else []
         if tags_new != tags:
             self.update_alpha_metadata(alpha_id, tags_new)
         return tags_new

@@ -231,8 +231,10 @@ class AlphaCalcCorr(AlphaDbCore):
         return results
 
     def _check_cache(self, alpha_ids: List[str], calc_type: str, corr_line: float) -> Dict[str, float]:
-        """检查数据库缓存"""
+        """检查数据库缓存。若数据库禁用则直接返回空。"""
         results: Dict[str, float] = {}
+        if self.dbmanager is None:
+            return results
         with tqdm(alpha_ids, desc=f"预处理 {calc_type} 相关", mininterval=2, maxinterval=5) as pbar:
             for alpha_id in pbar:
                 corr_cache, update_time = self.dbmanager.alphacorr_get(alpha_id, f"{calc_type}_corr")
@@ -245,7 +247,9 @@ class AlphaCalcCorr(AlphaDbCore):
         return results
 
     def _save_to_db(self, alpha_id: str, calc_type: str, corr: float) -> None:
-        """保存结果到数据库"""
+        """保存结果到数据库。若数据库禁用则跳过。"""
+        if self.dbmanager is None:
+            return
         try:
             corr_val = round(corr, 4)
             if calc_type == "self":
