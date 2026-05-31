@@ -65,8 +65,9 @@ class AlphaCalcCorr(AlphaDbCore):
     
 
     def load_data(self) -> None:
-        """加载所有活跃 Alpha 的收益率数据到内存。"""
-        self.alpha_returns = self.get_alpha_results([data["alpha_id"] for data in self.alpha_ids])
+        """加载所有活跃 Alpha（普通 + PPAC）的收益率数据到内存。"""
+        all_ids = [data["alpha_id"] for data in self.alpha_ids] + [data["alpha_id"] for data in self.ppac_alpha_ids]
+        self.alpha_returns = self.get_alpha_results(all_ids)
     
     
     def get_active_alphas(self) -> tuple[List[Dict[str, str]], List[Dict[str, str]]]:
