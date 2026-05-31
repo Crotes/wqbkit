@@ -66,22 +66,44 @@ class AlphaCalcCorr(AlphaDbCore):
     
 
     def load_data(self) -> None:
-        """加载所有活跃 Alpha 的收益率数据到内存，优先从本地缓存读取。"""
+        """加载所有活跃 Alpha 的收益率数据到内存，与 get_active_alphas 同步增量更新。"""
         cache_path = self.data_path / "alpha_returns.pkl"
-        if cache_path.exists():
-            mtime = datetime.fromtimestamp(cache_path.stat().st_mtime)
-            if mtime.date() == datetime.now().date():
-                try:
-                    self.alpha_returns = pd.read_pickle(cache_path)
-                    self.logger.info(f"从本地缓存加载 alpha_returns: {len(self.alpha_returns.columns)} 个 alpha")
-                    return
-                except Exception as e:
-                    self.logger.warning(f"本地缓存加载失败: {e}")
+        target_ids = {data["alpha_id"] for data in self.alpha_ids}
 
-        self.alpha_returns = self.get_alpha_returns([data["alpha_id"] for data in self.alpha_ids])
+        # 1. 尝试读取本地缓存
+        cached_returns = None
+        if cache_path.exists():
+            try:
+                cached_returns = pd.read_pickle(cache_path)
+                self.logger.info(f"本地缓存读取成功: {len(cached_returns.columns)} 个 alpha")
+            except Exception as e:
+                self.logger.warning(f"本地缓存读取失败: {e}")
+
+        # 2. 对比缓存，找出缺失的 alpha
+        if cached_returns is not None:
+            cached_ids = set(cached_returns.columns.astype(str))
+            missing_ids = sorted(target_ids - cached_ids)
+            if not missing_ids:
+                self.alpha_returns = cached_returns[list(target_ids & cached_ids)]
+                self.logger.info("所有 alpha 均在本地缓存中，无需调 API")
+                return
+            self.logger.info(f"本地缓存缺失 {len(missing_ids)} 个 alpha，增量获取")
+        else:
+            missing_ids = sorted(target_ids)
+
+        # 3. 仅对缺失 alpha 获取收益率
+        new_returns = self.get_alpha_returns(missing_ids)
+
+        # 4. 合并缓存与新数据
+        if cached_returns is not None and not new_returns.empty:
+            self.alpha_returns = pd.concat([cached_returns, new_returns], axis=1, join="outer")
+        else:
+            self.alpha_returns = new_returns
+
+        # 5. 持久化
         try:
             self.alpha_returns.to_pickle(cache_path)
-            self.logger.info(f"alpha_returns 已缓存到本地: {cache_path}")
+            self.logger.info(f"alpha_returns 已更新并缓存到本地: {cache_path}")
         except Exception as e:
             self.logger.error(f"本地缓存保存失败: {e}")
     
