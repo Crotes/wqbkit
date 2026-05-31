@@ -87,8 +87,16 @@ class AlphaCalcCorr(AlphaDbCore):
         else:
             missing_ids = sorted(target_ids)
 
-        # 3. 仅对缺失 alpha 获取收益率
-        new_returns = self.get_alpha_returns(missing_ids)
+        # 3. 仅对缺失 alpha 分批获取收益率，带进度条
+        new_returns_list: List[pd.DataFrame] = []
+        batch_size = 50
+        for i in tqdm(range(0, len(missing_ids), batch_size), desc="获取 alpha returns"):
+            batch = missing_ids[i:i + batch_size]
+            batch_df = self.get_alpha_returns(batch)
+            if not batch_df.empty:
+                new_returns_list.append(batch_df)
+
+        new_returns = pd.concat(new_returns_list, axis=1, join="outer") if new_returns_list else pd.DataFrame()
 
         # 4. 合并缓存与新数据
         if cached_returns is not None and not new_returns.empty:
