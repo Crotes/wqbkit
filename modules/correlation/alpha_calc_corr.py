@@ -128,10 +128,10 @@ class AlphaCalcCorr(AlphaDbCore):
                 order="dateSubmitted",
             )
 
-            for resp in resps:
+            for resp in tqdm(resps, desc="获取活跃 alpha 列表"):
                 try:
                     data = resp.json()
-                    for alpha in data["results"]:
+                    for alpha in tqdm(data["results"], desc="解析 alpha 数据", leave=False):
                         alpha_id = alpha["id"]
                         region = alpha["settings"]["region"]
                         classifications = alpha.get("classifications", [])
