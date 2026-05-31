@@ -5,12 +5,16 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# 项目根目录：editable install 时用源码目录，pip install 到 site-packages 时用当前工作目录
-_pkg_path = Path(__file__).resolve()
-if "site-packages" in str(_pkg_path):
-    PROJECT_ROOT: Path = Path.cwd()
+# 项目根目录：优先从 env 读取，其次自动检测
+_wqb_project_root = os.getenv("WQB_PROJECT_ROOT")
+if _wqb_project_root:
+    PROJECT_ROOT: Path = Path(_wqb_project_root)
 else:
-    PROJECT_ROOT: Path = _pkg_path.parents[2]
+    _pkg_path = Path(__file__).resolve()
+    if "site-packages" in str(_pkg_path):
+        PROJECT_ROOT: Path = Path.cwd()
+    else:
+        PROJECT_ROOT: Path = _pkg_path.parents[2]
 
 DATA_DIR: Path = PROJECT_ROOT / "data"
 LOGS_DIR: Path = PROJECT_ROOT / "logs"
