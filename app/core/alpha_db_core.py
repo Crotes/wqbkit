@@ -158,7 +158,7 @@ class AlphaDbCore(AlphaBaseCore):
         """将 PnL 数据转换为收益率。"""
         return pnl_df - pnl_df.ffill().shift(1)
 
-    def get_alpha_results(self, alpha_id: str|List[str]) -> pd.DataFrame:
+    def get_alpha_returns(self, alpha_id: str|List[str]) -> pd.DataFrame:
         """获取并计算单个或多个 Alpha 的收益率。"""
         if isinstance(alpha_id, str):
             pnl = self._get_alpha_pnl(alpha_id)

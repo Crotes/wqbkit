@@ -35,7 +35,7 @@ class AlphaCalcCorr(AlphaDbCore):
         self.data_path = (DATA_DIR / "correlation").absolute()
         self.check_path()
 
-        self.alpha_ids, self.ppac_alpha_ids = self.get_active_alphas()
+        self.alpha_ids, self.self_alpha_ids, self.ppac_alpha_ids = self.get_active_alphas()
         self.alpha_returns: Optional[pd.DataFrame] = None
         self.alpha_ids_now: Optional[List[str]] = None
         self.region_now: Optional[str] = None
@@ -66,13 +66,30 @@ class AlphaCalcCorr(AlphaDbCore):
     
 
     def load_data(self) -> None:
-        """加载所有活跃 Alpha 的收益率数据到内存。"""
-        self.alpha_returns = self.get_alpha_results([data["alpha_id"] for data in self.alpha_ids])
+        """加载所有活跃 Alpha 的收益率数据到内存，优先从本地缓存读取。"""
+        cache_path = self.data_path / "alpha_returns.pkl"
+        if cache_path.exists():
+            mtime = datetime.fromtimestamp(cache_path.stat().st_mtime)
+            if mtime.date() == datetime.now().date():
+                try:
+                    self.alpha_returns = pd.read_pickle(cache_path)
+                    self.logger.info(f"从本地缓存加载 alpha_returns: {len(self.alpha_returns.columns)} 个 alpha")
+                    return
+                except Exception as e:
+                    self.logger.warning(f"本地缓存加载失败: {e}")
+
+        self.alpha_returns = self.get_alpha_returns([data["alpha_id"] for data in self.alpha_ids])
+        try:
+            self.alpha_returns.to_pickle(cache_path)
+            self.logger.info(f"alpha_returns 已缓存到本地: {cache_path}")
+        except Exception as e:
+            self.logger.error(f"本地缓存保存失败: {e}")
     
     
     def get_active_alphas(self) -> tuple[List[Dict[str, str]], List[Dict[str, str]]]:
         """获取当前 OS 阶段的 Alpha 列表，区分普通 Alpha 和 PPAC Alpha，结果缓存到本地。"""
         alpha_ids = self.load_obj(self.data_path / "alpha_ids") or []
+        self_alpha_ids = self.load_obj(self.data_path / "self_alpha_ids") or []
         ppac_alpha_ids = self.load_obj(self.data_path / "ppac_alpha_ids") or []
 
         count = self.wqbs.filter_alphas_limited(others=['stage=OS'], log=None, limit=1, offset=0).json()["count"]
@@ -90,28 +107,38 @@ class AlphaCalcCorr(AlphaDbCore):
                     for alpha in data["results"]:
                         alpha_id = alpha["id"]
                         region = alpha["settings"]["region"]
+                        classifications = alpha.get("classifications", [])
+                        self_check = any(
+                            c.get("name") == "Regular Alpha"
+                            for c in classifications
+                        ) or classifications == []
+
                         ppac_check = any(
                             c.get("name") == "Power Pool Alpha"
-                            for c in alpha.get("classifications", [])
+                            for c in classifications
                         )
 
                         info = {
                             "alpha_id": alpha_id,
                             "region": region,
                         }
-
                         alpha_ids.append(info)
+
+                        if self_check:
+                            self_alpha_ids.append(info)
+
                         if ppac_check:
                             ppac_alpha_ids.append(info)
 
                 except Exception as e:
                     self.logger.error(f"获取 alpha 信息失败: {e}, 状态码 {resp.status_code}")
             self.save_obj(alpha_ids, self.data_path / "alpha_ids")
+            self.save_obj(self_alpha_ids, self.data_path / "self_alpha_ids")
             self.save_obj(ppac_alpha_ids, self.data_path / "ppac_alpha_ids")
 
         self.logger.info(f"获取数据成功, {len(alpha_ids)} 个 alpha , {len(ppac_alpha_ids)} 个 ppac")
         
-        return alpha_ids, ppac_alpha_ids
+        return alpha_ids, self_alpha_ids, ppac_alpha_ids
 
     def calc_corr(self, alpha_id: str, calc_type: str, show_detail: bool = False) -> float:
         """计算相关性"""
@@ -132,7 +159,7 @@ class AlphaCalcCorr(AlphaDbCore):
             self.calc_type_now = calc_type
             self._update_current_alpha_pool(region, calc_type, alpha_id)
 
-        returns_df = self.get_alpha_results(alpha_id)
+        returns_df = self.get_alpha_returns(alpha_id)
         if returns_df.empty or alpha_id not in returns_df.columns:
             return None
             
@@ -169,7 +196,8 @@ class AlphaCalcCorr(AlphaDbCore):
         """从API获取相关性"""
         try:
             url = f"https://api.worldquantbrain.com/alphas/{alpha_id}/correlations/{corr_type}"
-            return self.get(url).json()["max"]
+            data = self.get(url).json()
+            return data.get("max", 0)
         except Exception as e:
             self.logger.error(f"获取API相关性失败: {e}")
             return 1.0
@@ -182,7 +210,7 @@ class AlphaCalcCorr(AlphaDbCore):
     def _update_current_alpha_pool(self, region: str, calc_type: str, exclude_id: str) -> None:
         """更新当前用于计算的Alpha池"""
         if calc_type == "self":
-            self.alpha_ids_now = [data["alpha_id"] for data in self.alpha_ids if data["region"] == region]
+            self.alpha_ids_now = [data["alpha_id"] for data in self.self_alpha_ids if data["region"] == region]
         else:
             self.alpha_ids_now = [data["alpha_id"] for data in self.ppac_alpha_ids if data["region"] == region]
 
@@ -271,7 +299,7 @@ class AlphaCalcCorr(AlphaDbCore):
             return []
 
         try:
-            alpha_rets = self.get_alpha_results(alpha_ids)
+            alpha_rets = self.get_alpha_returns(alpha_ids)
             if alpha_rets.empty:
                 return []
             alpha_corr = alpha_rets.corr()
@@ -355,13 +383,6 @@ class AlphaCalcCorr(AlphaDbCore):
 
     def calculate_alpha_corr(self, alpha_ids: List[str]) -> None:
         """计算并打印Alpha之间的相关性"""
-        returns = self.get_returns(alpha_ids)
+        returns = self.get_alpha_returns(alpha_ids)
         alpha_corr = returns.corr()
         return alpha_corr
-
-    def get_returns(self, alpha_ids: List[str]) -> pd.DataFrame:
-        """获取指定 Alpha 列表的收益率矩阵。"""
-        pnls = self.get_alpha_pnls(alpha_ids)
-        if pnls.empty:
-            return pd.DataFrame()
-        return self.pnl_to_returns(pnls)

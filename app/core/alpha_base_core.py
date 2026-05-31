@@ -168,6 +168,29 @@ class AlphaBaseCore:
                 self.logger.error(f"{alpha_id}隐藏失败: {str(e)}")
                 raise
 
+    @retry_decorator()
+    def show_alpha(self, alpha_ids: str|list) -> None:
+        """显示alpha
+
+        Args:
+            alpha_id: Alpha ID
+        """
+        if not isinstance(alpha_ids, list):
+            alpha_ids = [alpha_ids]
+
+        for alpha_id in alpha_ids:
+            try:
+                self._handle_request_with_retry(
+                    'patch_properties',
+                    alpha_id,
+                    hidden=False,
+                    log=None
+                )
+                self.logger.info(f"{alpha_id}显示成功")
+            except Exception as e:
+                self.logger.error(f"{alpha_id}显示失败: {str(e)}")
+                raise
+
     def get_operators(self) -> None:
         """加载 WQB 官方算子列表，筛选出 REGULAR scope 的算子集合。"""
         resp = self.wqbs.search_operators(log=None)
