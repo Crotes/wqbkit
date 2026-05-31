@@ -43,9 +43,8 @@ class AlphaCalcCorr(AlphaDbCore):
         self.load_data()
 
     def check_path(self) -> None:
-        """若数据缓存目录不存在则创建。"""
-        if not os.path.exists(self.data_path):
-            os.mkdir(self.data_path)
+        """若数据缓存目录不存在则递归创建。"""
+        os.makedirs(self.data_path, exist_ok=True)
 
     @staticmethod
     def save_obj(obj: object, name: str) -> None:
