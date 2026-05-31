@@ -39,6 +39,7 @@ class AlphaCalcCorr(AlphaDbCore):
         self.alpha_returns: Optional[pd.DataFrame] = None
         self.alpha_ids_now: Optional[List[str]] = None
         self.region_now: Optional[str] = None
+        self.calc_type_now: Optional[str] = None
         self.load_data()
 
     def check_path(self) -> None:
@@ -65,9 +66,8 @@ class AlphaCalcCorr(AlphaDbCore):
     
 
     def load_data(self) -> None:
-        """加载所有活跃 Alpha（普通 + PPAC）的收益率数据到内存。"""
-        all_ids = [data["alpha_id"] for data in self.alpha_ids] + [data["alpha_id"] for data in self.ppac_alpha_ids]
-        self.alpha_returns = self.get_alpha_results(all_ids)
+        """加载所有活跃 Alpha 的收益率数据到内存。"""
+        self.alpha_returns = self.get_alpha_results([data["alpha_id"] for data in self.alpha_ids])
     
     
     def get_active_alphas(self) -> tuple[List[Dict[str, str]], List[Dict[str, str]]]:
@@ -127,8 +127,9 @@ class AlphaCalcCorr(AlphaDbCore):
             self.logger.error(f"无法获取Alpha {alpha_id} 的区域信息: {e}")
             return None
 
-        if region != self.region_now:
+        if region != self.region_now or calc_type != self.calc_type_now:
             self.region_now = region
+            self.calc_type_now = calc_type
             self._update_current_alpha_pool(region, calc_type, alpha_id)
 
         returns_df = self.get_alpha_results(alpha_id)
