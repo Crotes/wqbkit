@@ -15,7 +15,7 @@ from wqbkit.app.config import config
 
 from .db_models import (
     AlphaCorr, AlphaFactor, AlphaPnl, AlphaSimulated,
-    AlphaTask, get_engine, SuperAlpha, FieldCategory
+    AlphaTask, Base, get_engine, SuperAlpha, FieldCategory
 )
 
 # 配置日志
@@ -47,7 +47,11 @@ class AlphaDBManager:
             raise RuntimeError(
                 "Database is disabled. Set DB_ENABLE=true in .env to enable DB features."
             )
-        self._session_factory = scoped_session(sessionmaker(bind=get_engine()))
+        engine = get_engine()
+        self._session_factory = scoped_session(sessionmaker(bind=engine))
+        # 自动创建所有表（幂等：已存在则跳过）
+        Base.metadata.create_all(engine)
+        logger.info("Database tables ensured.")
     
     @contextmanager
     def session_scope(self) -> Generator[SQLAlchemySession, None, None]:

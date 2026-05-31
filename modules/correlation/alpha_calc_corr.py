@@ -75,7 +75,6 @@ class AlphaCalcCorr(AlphaDbCore):
         if cache_path.exists():
             try:
                 cached_returns = pd.read_pickle(cache_path)
-                self.logger.info(f"本地缓存读取成功: {len(cached_returns.columns)} 个 alpha")
             except Exception as e:
                 self.logger.warning(f"本地缓存读取失败: {e}")
 
@@ -85,9 +84,7 @@ class AlphaCalcCorr(AlphaDbCore):
             missing_ids = sorted(target_ids - cached_ids)
             if not missing_ids:
                 self.alpha_returns = cached_returns[list(target_ids & cached_ids)]
-                self.logger.info("所有 alpha 均在本地缓存中，无需调 API")
                 return
-            self.logger.info(f"本地缓存缺失 {len(missing_ids)} 个 alpha，增量获取")
         else:
             missing_ids = sorted(target_ids)
 
@@ -103,7 +100,6 @@ class AlphaCalcCorr(AlphaDbCore):
         # 5. 持久化
         try:
             self.alpha_returns.to_pickle(cache_path)
-            self.logger.info(f"alpha_returns 已更新并缓存到本地: {cache_path}")
         except Exception as e:
             self.logger.error(f"本地缓存保存失败: {e}")
     
