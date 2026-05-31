@@ -90,11 +90,13 @@ class AlphaCalcCorr(AlphaDbCore):
         # 3. 仅对缺失 alpha 分批获取收益率，带进度条
         new_returns_list: List[pd.DataFrame] = []
         batch_size = 50
-        for i in tqdm(range(0, len(missing_ids), batch_size), desc="获取 alpha returns"):
-            batch = missing_ids[i:i + batch_size]
-            batch_df = self.get_alpha_returns(batch)
-            if not batch_df.empty:
-                new_returns_list.append(batch_df)
+        with tqdm(total=len(missing_ids), desc="获取 alpha returns") as pbar:
+            for i in range(0, len(missing_ids), batch_size):
+                batch = missing_ids[i:i + batch_size]
+                batch_df = self.get_alpha_returns(batch)
+                if not batch_df.empty:
+                    new_returns_list.append(batch_df)
+                pbar.update(len(batch))
 
         new_returns = pd.concat(new_returns_list, axis=1, join="outer") if new_returns_list else pd.DataFrame()
 
