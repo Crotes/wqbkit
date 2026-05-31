@@ -5,8 +5,13 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# 项目根目录（wqbkit/app/config.py -> app -> wqbkit -> root）
-PROJECT_ROOT: Path = Path(__file__).resolve().parents[2]
+# 项目根目录：editable install 时用源码目录，pip install 到 site-packages 时用当前工作目录
+_pkg_path = Path(__file__).resolve()
+if "site-packages" in str(_pkg_path):
+    PROJECT_ROOT: Path = Path.cwd()
+else:
+    PROJECT_ROOT: Path = _pkg_path.parents[2]
+
 DATA_DIR: Path = PROJECT_ROOT / "data"
 LOGS_DIR: Path = PROJECT_ROOT / "logs"
 
