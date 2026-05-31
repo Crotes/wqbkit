@@ -227,6 +227,7 @@ class AlphaDbCore(AlphaBaseCore):
         if not tags:
             tags = []
         tags_new = [self.dbmanager.field_category_get(field, region) for field in datafields] if self.dbmanager is not None else []
-        if tags_new != tags:
+        tags_new = [t for t in tags_new if t is not None]
+        if tags_new and tags_new != tags:
             self.update_alpha_metadata(alpha_id, tags_new)
         return tags_new
