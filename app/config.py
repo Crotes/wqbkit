@@ -3,6 +3,8 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
+# 加载 .env；nohup 启动时 cwd 通常是项目根目录，dotenv 能自动找到
+# 如果启动目录不是项目根目录，可通过 WQB_PROJECT_ROOT 指定
 load_dotenv()
 
 # 项目根目录：优先从 env 读取，其次自动检测

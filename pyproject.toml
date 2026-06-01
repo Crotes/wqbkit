@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "wqbkit"
-version = "0.4.3"
+version = "0.4.4"
 description = "WorldQuant Brain Alpha Research Automation Toolkit"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -51,5 +51,4 @@ Homepage = "https://github.com/Crotes/wqbkit"
 Issues = "https://github.com/Crotes/wqbkit/issues"
 
 [tool.hatch.build.targets.wheel]
-force-include = {"__init__.py" = "wqbkit/__init__.py", "app" = "wqbkit/app", "modules" = "wqbkit/modules"}
-
+packages = ["."]
