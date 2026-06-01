@@ -1248,7 +1248,7 @@ class OsmosisAlphaSelectorV3(AlphaCalcCorr):
         # --- Step 2: Drawdown overlap (threshold 0.7) ---
         if len(df_work) > self.config["min_alpha_count"]:
             try:
-                returns = self.get_alpha_results(df_work["id"].tolist())
+                returns = self.get_alpha_returns(df_work["id"].tolist())
                 if not returns.empty:
                     dd_mask = self._compute_drawdown_mask(returns)
                     to_remove_dd = self._find_drawdown_overlap_pairs(
@@ -1571,7 +1571,7 @@ class OsmosisAlphaSelectorV3(AlphaCalcCorr):
         if df.empty:
             return pd.DataFrame()
         try:
-            returns = self.get_alpha_results(df["id"].tolist())
+            returns = self.get_alpha_returns(df["id"].tolist())
             self.logger.info(f"Returns 矩阵: {returns.shape}")
             return returns
         except Exception as e:

@@ -56,7 +56,7 @@ class AlphaMachine(AlphaDbCore):
         self.logger.info(f'默认选中 {alpha_ids[0]}')
         selected = [alpha_ids[0]]
         dont_select = []
-        alpha_returns = self.get_alpha_results(alpha_ids[0])
+        alpha_returns = self.get_alpha_returns(alpha_ids[0])
         
         data_fields_all: Set[str] = set()
         operators_all: Set[str] = set()
@@ -67,7 +67,7 @@ class AlphaMachine(AlphaDbCore):
         with tqdm(total=n-1, desc=f"根据{threshold:.2f}相关性选取因子", mininterval=0.1) as pbar:
             for i in range(1, n):
                 alpha_id = alpha_ids[i]
-                returns = self.get_alpha_results(alpha_id)
+                returns = self.get_alpha_returns(alpha_id)
                 
                 alpha_returns_tmp = pd.concat([alpha_returns, returns], axis=1)
                 correlations = alpha_returns_tmp[selected].corrwith(alpha_returns_tmp[alpha_id])
@@ -112,7 +112,7 @@ class AlphaMachine(AlphaDbCore):
 
         corr_map: Dict[str, float] = {}
         for alpha_id in dont_select:
-            returns = self.get_alpha_results(alpha_id)
+            returns = self.get_alpha_returns(alpha_id)
             alpha_returns_tmp = pd.concat([alpha_returns, returns], axis=1)
             correlations = alpha_returns_tmp[selected].corrwith(alpha_returns_tmp[alpha_id])
             corr_map[alpha_id] = correlations.max()
