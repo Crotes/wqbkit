@@ -4,9 +4,11 @@ WorldQuant Brain Alpha 交互的核心功能。
 """
 import time
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 from typing import Any, Dict
 
 import requests
+from dotenv import load_dotenv, find_dotenv
 from wqb import NULL, WQBSession, FilterRange
 
 from wqbkit.app.config import config
@@ -19,11 +21,33 @@ RETRY_AFTER_MIN_SECONDS: int = 10
 class AlphaBaseCore:
     """WorldQuant Brain Alpha 交互的基类。"""
 
-    def __init__(self) -> None:
-        """初始化基类：加载认证信息并建立 WQB 登录会话。"""
+    def __init__(self, project_root: str | Path | None = None) -> None:
+        """初始化基类：加载认证信息并建立 WQB 登录会话。
+
+        Args:
+            project_root: 项目根目录路径。为 None 时默认使用当前工作目录。
+                         .env 文件将从 project_root / ".env" 加载。
+        """
+        if project_root:
+            self.project_root = Path(project_root)
+            env_path = self.project_root / ".env"
+            if env_path.exists():
+                load_dotenv(env_path, override=True)
+        else:
+            # 未指定 project_root 时，用 dotenv 自动查找 .env 并推断项目根目录
+            load_dotenv()
+            env_file = find_dotenv()
+            if env_file:
+                self.project_root = Path(env_file).parent
+            else:
+                self.project_root = Path.cwd()
+
+        # 刷新 Config 实例，使其读取刚加载的 .env 变量，并同步路径
+        config.reload(self.project_root)
+
         self._username = config.WQB_USERNAME
         self._password = config.WQB_PASSWORD
-        self.logger = get_logger(self.__class__.__name__)
+        self.logger = get_logger(self.__class__.__name__, log_dir=self.project_root / "logs")
         self.wqbs = self._login()
 
     @retry_decorator()
@@ -277,7 +301,7 @@ class AlphaBaseCore:
         pyramids = resp.json()['pyramids']
         pyramids_dict: dict = {}
         for item in pyramids:
-            category = item['category']['name']
+            category = item['category']['name'].replace(" ", "")
             region = item['region']
             delay = item['delay']
             alpha_count = item['alphaCount']

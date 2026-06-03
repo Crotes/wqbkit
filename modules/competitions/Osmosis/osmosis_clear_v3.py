@@ -1,3 +1,4 @@
+from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
@@ -42,9 +43,13 @@ class OsmosisClearV3(AlphaBaseCore):
         "default_start_date": "2025-01-01",
     }
 
-    def __init__(self, config: Optional[Dict] = None):
-        """初始化 Osmosis 清仓模块 V3。"""
-        super().__init__()
+    def __init__(self, config: Optional[Dict] = None, project_root: str | Path | None = None):
+        """初始化 Osmosis 清仓模块 V3。
+
+        Args:
+            project_root: 透传给 AlphaBaseCore，控制 .env 加载路径。
+        """
+        super().__init__(project_root)
         self.config = {**self.DEFAULT_CONFIG, **(config or {})}
         self.logger.info("OsmosisClearV3 initialized")
 

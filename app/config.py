@@ -1,24 +1,12 @@
 import os
 from pathlib import Path
 
-from dotenv import load_dotenv
-
-# 加载 .env；start_nohup.sh 已 cd 到项目根目录，无参 load_dotenv 能可靠找到
-load_dotenv()
-
-# 项目根目录：优先从 env 读取，其次自动检测
-_wqb_project_root = os.getenv("WQB_PROJECT_ROOT")
-if _wqb_project_root:
-    PROJECT_ROOT: Path = Path(_wqb_project_root)
-else:
-    _pkg_path = Path(__file__).resolve()
-    if "site-packages" in str(_pkg_path):
-        PROJECT_ROOT: Path = Path.cwd()
-    else:
-        PROJECT_ROOT: Path = _pkg_path.parents[2]
-
-DATA_DIR: Path = PROJECT_ROOT / "data"
-LOGS_DIR: Path = PROJECT_ROOT / "logs"
+# ---------------------------------------------------------------------------
+# 模块级路径变量（向后兼容，初始为 None，由 AlphaBaseCore 实例化时设置）
+# ---------------------------------------------------------------------------
+PROJECT_ROOT: Path | None = None
+DATA_DIR: Path | None = None
+LOGS_DIR: Path | None = None
 
 
 class Config:
@@ -57,6 +45,45 @@ class Config:
     DEFAULT_PAGE_LIMIT: int = 100
     DEFAULT_PAGE_OFFSET: int = 0
     DEFAULT_DYEING_WORKERS: int = 3
+
+    # 实例级路径属性（由 reload 方法设置）
+    project_root: Path = Path.cwd()
+    data_dir: Path = Path.cwd() / "data"
+    logs_dir: Path = Path.cwd() / "logs"
+
+    def reload(self, project_root: str | Path | None = None) -> None:
+        """重新从 os.environ 读取配置，并可指定项目根目录。
+
+        Args:
+            project_root: 项目根目录。指定后会同步更新 DATA_DIR / LOGS_DIR
+                          以及模块级变量 PROJECT_ROOT / DATA_DIR / LOGS_DIR。
+        """
+        self.ENABLE_DATABASE = os.getenv("DB_ENABLE", "true").lower() in ("true", "1", "yes")
+        self.DB_HOST = os.getenv("DB_HOST", "localhost")
+        self.DB_PORT = os.getenv("DB_PORT", "5432")
+        self.DB_NAME = os.getenv("DB_NAME", "WorldQuant")
+        self.DB_USER = os.getenv("DB_USER", "postgres")
+        self.DB_PASSWORD = os.getenv("DB_PASSWORD", "")
+        self.WQB_USERNAME = os.getenv("WQB_USERNAME", "")
+        self.WQB_PASSWORD = os.getenv("WQB_PASSWORD", "")
+        self.MAX_RETRIES = int(os.getenv("MAX_RETRIES", "5"))
+        self.RETRY_DELAY_BASE = int(os.getenv("RETRY_DELAY_BASE", "2"))
+        self.BARK_KEY = os.getenv("BARK_KEY", "")
+        self.BARK_BASE_URL = os.getenv("BARK_BASE_URL", "https://api.day.app")
+        self.DEFAULT_CONSULTANT_DAY = os.getenv("DEFAULT_CONSULTANT_DAY", "2025-04-19")
+
+        if project_root:
+            self.project_root = Path(project_root)
+        # 否则保持当前值（由 AlphaBaseCore 的 project_root 参数决定）
+
+        self.data_dir = self.project_root / "data"
+        self.logs_dir = self.project_root / "logs"
+
+        # 同步更新模块级变量，确保 logger.py 等模块也能看到正确路径
+        global PROJECT_ROOT, DATA_DIR, LOGS_DIR
+        PROJECT_ROOT = self.project_root
+        DATA_DIR = self.data_dir
+        LOGS_DIR = self.logs_dir
 
     @property
     def DATABASE_URI(self) -> str:

@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Dict, Optional
 
 import numpy as np
@@ -55,9 +56,13 @@ class OsmosisAllocatorV3(AlphaBaseCore):
         "constraint_convergence_tol": 1e-4,
     }
 
-    def __init__(self, config: Optional[Dict] = None):
-        """初始化 Osmosis 资金分配器 V3。"""
-        super().__init__()
+    def __init__(self, config: Optional[Dict] = None, project_root: str | Path | None = None):
+        """初始化 Osmosis 资金分配器 V3。
+
+        Args:
+            project_root: 透传给 AlphaBaseCore，控制 .env 加载路径。
+        """
+        super().__init__(project_root)
         self.config = {**self.DEFAULT_CONFIG, **(config or {})}
         self.logger.info("OsmosisAllocatorV3 initialized")
 

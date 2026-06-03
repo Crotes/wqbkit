@@ -720,10 +720,14 @@ class AlphaDBManager:
             with self.session_scope() as session:
                 alpha = session.query(AlphaCorr).filter_by(alpha_id=alpha_id).first()
                 if alpha:
-                    if self_corr is not None: alpha.self_corr = self_corr
-                    if ppac_corr is not None: alpha.ppac_corr = ppac_corr
-                    if prod_corr is not None: alpha.prod_corr = prod_corr
-                    if self_web_corr is not None: alpha.self_web_corr = self_web_corr
+                    if self_corr is not None:
+                        alpha.self_corr = self_corr
+                    if ppac_corr is not None:
+                        alpha.ppac_corr = ppac_corr
+                    if prod_corr is not None:
+                        alpha.prod_corr = prod_corr
+                    if self_web_corr is not None:
+                        alpha.self_web_corr = self_web_corr
                 else:
                     new_alpha = AlphaCorr(
                         alpha_id=alpha_id,

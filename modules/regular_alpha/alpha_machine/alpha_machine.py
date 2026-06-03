@@ -1,3 +1,4 @@
+from pathlib import Path
 import random
 from typing import Dict, List, Optional, Set, Tuple
 
@@ -19,9 +20,13 @@ class AlphaMachine(AlphaDbCore):
     FALLBACK_TWO_YEAR_SHARPE_THRESHOLD = 0.3
     MAX_GENERATED = 15000
 
-    def __init__(self) -> None:
-        """初始化 Alpha 生成机：加载算子并初始化生成器。"""
-        super().__init__()
+    def __init__(self, project_root: str | Path | None = None) -> None:
+        """初始化 Alpha 生成机：加载算子并初始化生成器。
+
+        Args:
+            project_root: 透传给 AlphaBaseCore，控制 .env 加载路径。
+        """
+        super().__init__(project_root)
         self.operators: List[str] = []
         self.all_operators: List[str] = []
         self.get_operator()

@@ -1,5 +1,4 @@
-
-import sys
+from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, wait, FIRST_COMPLETED
 from datetime import datetime, timedelta
 from threading import current_thread, Event
@@ -29,9 +28,13 @@ class SuperAlphaSimulator(AlphaBaseCore):
     ERROR_WAIT_SECONDS = 30
     NO_ALPHA_WAIT_SECONDS = 10
 
-    def __init__(self):
-        """初始化 SUPER Alpha 模拟器。"""
-        super().__init__()
+    def __init__(self, project_root: str | Path | None = None):
+        """初始化 SUPER Alpha 模拟器。
+
+        Args:
+            project_root: 透传给 AlphaBaseCore，控制 .env 加载路径。
+        """
+        super().__init__(project_root)
         self.max_concurrent = self.MAX_CONCURRENT_TASKS
 
         self.dbmanager = AlphaDBManager()

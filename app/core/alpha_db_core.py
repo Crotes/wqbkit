@@ -1,3 +1,4 @@
+from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 import json
 from typing import List, Tuple
@@ -18,9 +19,13 @@ RETENTION_YEARS: int = 4
 class AlphaDbCore(AlphaBaseCore):
     """Alpha PnL 数据访问与转换。"""
 
-    def __init__(self) -> None:
-        """初始化数据库核心：继承基类登录会话并初始化数据库管理器。"""
-        super().__init__()
+    def __init__(self, project_root: str | Path | None = None) -> None:
+        """初始化数据库核心：继承基类登录会话并初始化数据库管理器。
+
+        Args:
+            project_root: 透传给 AlphaBaseCore，控制 .env 加载路径。
+        """
+        super().__init__(project_root)
         self.dbmanager = AlphaDBManager() if config.ENABLE_DATABASE else None
         self.retention_years = RETENTION_YEARS
         self.get_operators()
@@ -38,8 +43,7 @@ class AlphaDbCore(AlphaBaseCore):
                 url = URL_ALPHA_PNL.format(alpha_id)
                 response = self.get(url)
             except Exception as e:
-                print(url)
-                self.logger.error(f"Error fetching PnL for {alpha_id}: {e}")
+                self.logger.error(f"Error fetching PnL for {alpha_id} from {url}: {e}")
                 return pd.DataFrame()
 
             pnl_data = response.json()
@@ -180,8 +184,6 @@ class AlphaDbCore(AlphaBaseCore):
 
         覆盖 AlphaBaseCore.extract_tokens，增加 dbmanager.field_check 过滤。
         """
-        import re
-
         cnt = [
             "market", "sector", "industry", "subindustry",
             "exchange", "country", "currency",
@@ -218,7 +220,7 @@ class AlphaDbCore(AlphaBaseCore):
         Returns:
             新生成的标签列表
         """
-        if region == None or expression == None:
+        if region is None or expression is None:
             resp = self.wqbs.locate_alpha(alpha_id, log=None)
             data = resp.json()
             region = data['settings']['region']

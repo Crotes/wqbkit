@@ -1,6 +1,9 @@
+from pathlib import Path
 import signal
 import json
 import os
+from queue import Queue, Empty
+from threading import current_thread, Event
 
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
@@ -11,22 +14,20 @@ import pytz
 from pytz import timezone
 from wqb import FilterRange
 
-from wqbkit.app.core import *
+from wqbkit.app.core.alpha_db_core import AlphaDbCore
+from wqbkit.app.core.decorators import retry_decorator
+from wqbkit.app.core.wqb_urls import URL_ALPHAS_ALPHAID, URL_SIMULATIONS
+from wqbkit.app.config import config
 from wqbkit.app.database import Status, FactorData, SimulationData
-
-# from wqb import FilterRange
 
 # 获取美国东部时间
 eastern = timezone("US/Eastern")
 fmt = "%Y-%m-%d"
 loc_dt_fmt = datetime.now(eastern).strftime(fmt)
 
-from queue import Queue, Empty
-from threading import Lock, current_thread, Event
-
 
 class AlphaSimulator(AlphaDbCore):
-    def __init__(self, limit_of_multi_simulations: int, limit_of_children_simulations: int):
+    def __init__(self, limit_of_multi_simulations: int, limit_of_children_simulations: int, project_root: str | Path | None = None):
         """
         初始化Alpha模拟器
 
@@ -34,7 +35,7 @@ class AlphaSimulator(AlphaDbCore):
             limit_of_multi_simulations: 多模拟的限制数量
             limit_of_children_simulations: 子模拟的限制数量
         """
-        super().__init__()
+        super().__init__(project_root)
         self.limit_of_multi_simulations = limit_of_multi_simulations
         self.limit_of_children_simulations = limit_of_children_simulations
         self.max_concurrent = limit_of_multi_simulations
@@ -521,26 +522,6 @@ class AlphaSimulator(AlphaDbCore):
                         generation=factor_info.generation,
                         tag=factor_info.tag
                     ) for neut in neut_other
-                ])
-
-            # Decay 衍生逻辑
-            decays_base = 4
-            decays_other = [1, 2, 8, 16, 32, 64, 128, 256]
-            if simulation_result.fail_num == 0 and simulation_result.decay == decays_base:
-                self.dbmanager.alphafactor_bulk_insert([
-                    FactorData(
-                        factor_id=None,
-                        pre=factor_info.pre,
-                        expression=factor_info.expression,
-                        region=factor_info.region,
-                        universe=factor_info.universe,
-                        neutralization=factor_info.neutralization,
-                        decay=_decay,
-                        priority=factor_info.priority,
-                        task_id=factor_info.task_id,
-                        generation=factor_info.generation,
-                        tag=factor_info.tag
-                    ) for _decay in decays_other
                 ])
 
             self.logger.info(f"{log_prefix} {url} end: 当前模拟处理完成")

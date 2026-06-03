@@ -1,5 +1,3 @@
-from .alpha_generator import AlphaGenerator
-
 from wqbkit.app.config import config, _DisabledDBClass
 
 if config.ENABLE_DATABASE:

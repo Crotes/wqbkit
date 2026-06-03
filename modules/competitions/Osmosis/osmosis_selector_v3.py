@@ -1,6 +1,5 @@
 import json
 import pickle
-import sys
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
@@ -13,7 +12,7 @@ from tqdm import tqdm
 from wqb import FilterRange
 
 from wqbkit.modules.correlation.alpha_calc_corr import AlphaCalcCorr
-from wqbkit.app.config import config, DATA_DIR
+from wqbkit.app.config import config
 
 
 
@@ -161,19 +160,22 @@ class OsmosisAlphaSelectorV3(AlphaCalcCorr):
     # ------------------------------------------------------------------
     # 数据目录定位
     # ------------------------------------------------------------------
-    @staticmethod
-    def _get_data_dir() -> Path:
+    def _get_data_dir(self) -> Path:
         """Osmosis V3 统一数据目录"""
-        data_dir = DATA_DIR / "Osmosis"
+        data_dir = self.project_root / "data" / "Osmosis"
         data_dir.mkdir(parents=True, exist_ok=True)
         return data_dir
 
     # ------------------------------------------------------------------
     # 初始化
     # ------------------------------------------------------------------
-    def __init__(self, config: Optional[Dict] = None):
-        """初始化 Osmosis Alpha 选择器 V3。"""
-        super().__init__()
+    def __init__(self, config: Optional[Dict] = None, project_root: str | Path | None = None):
+        """初始化 Osmosis Alpha 选择器 V3。
+
+        Args:
+            project_root: 透传给 AlphaBaseCore，控制 .env 加载路径。
+        """
+        super().__init__(project_root)
         self.config = {**self.DEFAULT_CONFIG, **(config or {})}
 
         data_dir = self._get_data_dir()

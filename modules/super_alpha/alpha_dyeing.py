@@ -1,3 +1,4 @@
+from pathlib import Path
 import random
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
@@ -15,9 +16,13 @@ DEFAULT_MAX_WORKERS = config.DEFAULT_DYEING_WORKERS
 
 
 class AlphaDyeing(AlphaBaseCore):
-    def __init__(self, max_workers: int = DEFAULT_MAX_WORKERS):
-        """初始化 Alpha 染色模块。"""
-        super().__init__()
+    def __init__(self, max_workers: int = DEFAULT_MAX_WORKERS, project_root: str | Path | None = None):
+        """初始化 Alpha 染色模块。
+
+        Args:
+            project_root: 透传给 AlphaBaseCore，控制 .env 加载路径。
+        """
+        super().__init__(project_root)
         self.max_workers = max_workers
 
     def up_alpha_properties(self, alpha_id: str, color: str = NULL) -> str:

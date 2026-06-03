@@ -12,7 +12,7 @@ from tqdm import tqdm
 from wqbkit.app.core.alpha_db_core import AlphaDbCore
 
 
-from wqbkit.app.config import config, DATA_DIR
+from wqbkit.app.config import config
 
 MAX_WORKERS: int = config.MAX_WORKERS
 DEFAULT_CORR_THRESHOLD: float = 0.7
@@ -28,11 +28,15 @@ CORR_THRESHOLDS = {
 class AlphaCalcCorr(AlphaDbCore):
     """Alpha 相关性计算。"""
 
-    def __init__(self) -> None:
-        """初始化相关性计算模块，创建本地数据存储目录。"""
-        super().__init__()
+    def __init__(self, project_root: str | Path | None = None) -> None:
+        """初始化相关性计算模块，创建本地数据存储目录。
 
-        self.data_path = (DATA_DIR / "correlation").absolute()
+        Args:
+            project_root: 透传给 AlphaBaseCore，控制 .env 加载路径。
+        """
+        super().__init__(project_root)
+
+        self.data_path = (self.project_root / "data" / "correlation").absolute()
         self.check_path()
 
         self.alpha_ids, self.self_alpha_ids, self.ppac_alpha_ids = self.get_active_alphas()

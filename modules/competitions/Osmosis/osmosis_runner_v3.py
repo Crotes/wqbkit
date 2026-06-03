@@ -196,7 +196,7 @@ class OsmosisRunnerV3:
         cfg = self.config
         df = df.sort_values("assigned_score", ascending=False).reset_index(drop=True)
 
-        self.logger.info(f"")
+        self.logger.info("")
         self.logger.info(f"【{region}】分配结果: {len(df)} 个 Alpha, 总分={df['assigned_score'].sum()}")
         self.logger.info(f"  最高: {df['assigned_score'].max():,.0f}  |  "
                         f"最低: {df['assigned_score'].min():,.0f}  |  "
@@ -211,7 +211,7 @@ class OsmosisRunnerV3:
         # Top 15 详情
         display_cols = ["id", "type", "sharpe", "fitness", "turnover", "assigned_score"]
         available_cols = [c for c in display_cols if c in df.columns]
-        self.logger.info(f"\n  Top 15:")
+        self.logger.info("\n  Top 15:")
         for line in df[available_cols].head(15).to_string(index=False).split("\n"):
             self.logger.info(f"  {line}")
 
@@ -222,7 +222,7 @@ class OsmosisRunnerV3:
             labels=cfg["score_bin_labels"],
         )
         bin_counts = df["_bin"].value_counts().sort_index()
-        self.logger.info(f"\n  分数分布:")
+        self.logger.info("\n  分数分布:")
         for bin_label, count in bin_counts.items():
             percentage = count / len(df) * 100
             bar_length = int(percentage / 2)
